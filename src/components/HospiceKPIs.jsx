@@ -88,8 +88,12 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
               <input
                 type="text"
                 inputMode="decimal"
-                value={inputs.capLiabilityAmount}
-                onChange={(e) => updateInput('capLiabilityAmount', parseFloat(e.target.value.replace(/[^0-9.]/g, '')) || 0)}
+                placeholder="Enter amount"
+                value={inputs.capLiabilityAmount || ''}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9.]/g, '');
+                  updateInput('capLiabilityAmount', raw === '' ? 0 : parseFloat(raw));
+                }}
                 className="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>

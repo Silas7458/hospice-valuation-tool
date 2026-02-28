@@ -57,8 +57,8 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   // --- CAP adjustment (H75) ---
   const capAdj = (pl.acdriV2 + pl.acdriV4) / 2;
 
-  // --- Trailing CAP liability deduction ---
-  const trailingCapLiability = inputs.priorCapLiabilities === 'yes' ? (inputs.capLiabilityAmount || 0) : 0;
+  // --- Trailing CAP liability deduction (only when a dollar amount is entered) ---
+  const trailingCapLiability = (inputs.priorCapLiabilities === 'yes' && inputs.capLiabilityAmount > 0) ? inputs.capLiabilityAmount : 0;
 
   // --- Final adjusted values ---
   const lowAdj   = low + capAdj - trailingCapLiability;
