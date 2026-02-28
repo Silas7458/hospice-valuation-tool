@@ -88,8 +88,8 @@ function calcPatientQualityFactor(inputs) {
   if (dcRateToAdc === 0 || yearlyAdc === 0) return 1;
 
   return (
-    (1 + (deathRateToAdc / dcRateToAdc - 0.5) * 0.6) *
-    (1 -
+    (1 + (deathRateToAdc / dcRateToAdc - 0.5) * 0.35) *
+    (1 +
       ((endAdc - startAdc) / yearlyAdc) * 0.3 -
       ((yearlyAdc - (startAdc + endAdc) / 2) / yearlyAdc) * 0.3)
   );
