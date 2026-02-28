@@ -1,6 +1,7 @@
 /**
  * HospiceKPIs.jsx — Section A: Operational KPIs
  */
+import { useState } from 'react';
 import { Activity } from 'lucide-react';
 import { formatCurrency, formatNumber, formatPercent } from '../engine/formatting.js';
 
@@ -49,6 +50,58 @@ function ToggleRow({ label, value, onChange }) {
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-slate-700">{label}</span>
       <Toggle value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+function RateCountRow({ label, countLabel, rate, yearlyAdc, onRateChange }) {
+  const computedCount = rate * yearlyAdc;
+  const computedPct = Math.round(rate * 10000) / 100;
+
+  const [countText, setCountText] = useState(null); // null = not editing
+  const [pctText, setPctText] = useState(null);
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-1">
+        <label className="block text-xs font-medium text-slate-500 mb-0.5">{label} Rate (%)</label>
+        <div className="relative">
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0"
+            value={pctText !== null ? pctText : (computedPct || '')}
+            onFocus={() => setPctText(computedPct ? String(computedPct) : '')}
+            onBlur={() => setPctText(null)}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^0-9.]/g, '');
+              setPctText(raw);
+              onRateChange(raw === '' ? 0 : parseFloat(raw) / 100);
+            }}
+            className="w-full px-3 py-2 pr-7 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
+        </div>
+      </div>
+      <span className="text-slate-300 mt-4">or</span>
+      <div className="flex-1">
+        <label className="block text-xs font-medium text-slate-500 mb-0.5">{countLabel}</label>
+        <input
+          type="text"
+          inputMode="decimal"
+          placeholder="0"
+          value={countText !== null ? countText : (computedCount === 0 ? '' : (Math.round(computedCount * 10) / 10).toFixed(1))}
+          onFocus={() => setCountText(computedCount ? String(Math.round(computedCount * 10) / 10) : '')}
+          onBlur={() => setCountText(null)}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9.]/g, '');
+            setCountText(raw);
+            const n = raw === '' ? 0 : parseFloat(raw);
+            onRateChange(yearlyAdc > 0 ? n / yearlyAdc : 0);
+          }}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+        />
+      </div>
     </div>
   );
 }
@@ -116,48 +169,16 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
           { rateKey: 'admitRateToAdc', label: 'Admit', countLabel: 'Admits/Yr' },
           { rateKey: 'dcRateToAdc', label: 'DC', countLabel: 'DCs/Yr' },
           { rateKey: 'deathRateToAdc', label: 'Death', countLabel: 'Deaths/Yr' },
-        ].map(({ rateKey, label, countLabel }) => {
-          const rate = inputs[rateKey];
-          const count = rate * inputs.yearlyAdc;
-          const pctDisplay = Math.round(rate * 10000) / 100;
-          return (
-            <div key={rateKey} className="flex items-center gap-3">
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-slate-500 mb-0.5">{label} Rate (%)</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={pctDisplay || ''}
-                    placeholder="0"
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/[^0-9.]/g, '');
-                      updateInput(rateKey, raw === '' ? 0 : parseFloat(raw) / 100);
-                    }}
-                    className="w-full px-3 py-2 pr-7 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
-                </div>
-              </div>
-              <span className="text-slate-300 mt-4">or</span>
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-slate-500 mb-0.5">{countLabel}</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={count === 0 ? '' : (Math.round(count * 10) / 10).toFixed(1)}
-                  placeholder="0"
-                  onChange={(e) => {
-                    const raw = e.target.value.replace(/[^0-9.]/g, '');
-                    const n = raw === '' ? 0 : parseFloat(raw);
-                    updateInput(rateKey, inputs.yearlyAdc > 0 ? n / inputs.yearlyAdc : 0);
-                  }}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                />
-              </div>
-            </div>
-          );
-        })}
+        ].map(({ rateKey, label, countLabel }) => (
+          <RateCountRow
+            key={rateKey}
+            label={label}
+            countLabel={countLabel}
+            rate={inputs[rateKey]}
+            yearlyAdc={inputs.yearlyAdc}
+            onRateChange={(r) => updateInput(rateKey, r)}
+          />
+        ))}
       </div>
 
       {/* Calculated displays */}
