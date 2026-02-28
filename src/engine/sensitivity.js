@@ -18,9 +18,11 @@ import { getStartingMultiples } from './tiers.js';
  * @param {object} derived  — output of derivedMetrics(pl, inputs)
  * @param {object} overrides — optional user-provided multiples keyed by method
  *                             name (sde, ebitda, revenue, normEbitda, perAdc)
+ * @param {object} factorOverrides — optional per-engine factor overrides
+ *                                   keyed by engine.factorKey (e.g., { sde: { highEbitda: 0.5 } })
  * @returns {object}
  */
-export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
+export function calculateAllSensitivities(inputs, pl, derived, overrides = {}, factorOverrides = {}) {
   const starting = getStartingMultiples(inputs.yearlyAdc);
 
   // --- CAP liability as % of gross revenue → graduated sensitivity tier ---
@@ -48,12 +50,12 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
     highLiveDc: liveDcAutoTriggered || inputs.highLiveDc === 'yes',
   };
 
-  // --- Run each engine ---
-  const sdeResult        = sdeEngine(starting.sde, inputs, derivedWithCap);
-  const perAdcResult     = perAdcEngine(starting.perAdc, inputs, derivedWithCap);
-  const ebitdaResult     = ebitdaEngine(starting.ebitda, inputs, derivedWithCap);
-  const revenueResult    = revenueEngine(starting.revenue, inputs, derivedWithCap);
-  const normEbitdaResult = normEbitdaEngine(starting.normEbitda, inputs, derivedWithCap);
+  // --- Run each engine (with optional per-factor overrides) ---
+  const sdeResult        = sdeEngine(starting.sde, inputs, derivedWithCap, factorOverrides.sde);
+  const perAdcResult     = perAdcEngine(starting.perAdc, inputs, derivedWithCap, factorOverrides.perAdc);
+  const ebitdaResult     = ebitdaEngine(starting.ebitda, inputs, derivedWithCap, factorOverrides.ebitda);
+  const revenueResult    = revenueEngine(starting.revenue, inputs, derivedWithCap, factorOverrides.revenue);
+  const normEbitdaResult = normEbitdaEngine(starting.normEbitda, inputs, derivedWithCap, factorOverrides.normEbitda);
 
   // --- Apply overrides (F60-F64) ---
   const sdeMultiple        = overrides.sde        ?? sdeResult.total;
@@ -172,6 +174,18 @@ function engineResult(starting, factors) {
   };
 }
 
+/** Apply per-factor overrides to a factors array */
+function applyFactorOverrides(factors, overrides) {
+  if (!overrides) return factors;
+  return factors.map(f => {
+    const ov = overrides[f.key];
+    if (ov !== undefined && ov !== null && ov !== '') {
+      return { ...f, value: Number(ov), overridden: true };
+    }
+    return f;
+  });
+}
+
 /** Scale a base CAP penalty by the graduated tier */
 function capTierMultiplier(tier) {
   if (tier === 'high') return 2.0;
@@ -184,7 +198,7 @@ function capTierMultiplier(tier) {
 // SDE Engine  (J3-J17)
 // ---------------------------------------------------------------------------
 
-function sdeEngine(starting, inputs, d) {
+function sdeEngine(starting, inputs, d, overrides) {
   const factors = [
     { key: 'highEbitda',     label: 'EBITDA > 18%',     value: d.highEbitdaMargin ? 0.375 : 0 },
     { key: 'capRisk',        label: 'CAP Risk',         value: d.recurringCap ? -0.375 * capTierMultiplier(d.capSensitivityTier) : 0 },
@@ -200,14 +214,14 @@ function sdeEngine(starting, inputs, d) {
     { key: 'auditRisk',      label: 'Audit Risk',       value: inputs.auditRisk === 'yes' ? -0.375 : 0 },
     { key: 'other',          label: 'Other',            value: inputs.sdeOther ?? 0 },
   ];
-  return engineResult(starting, factors);
+  return engineResult(starting, applyFactorOverrides(factors, overrides));
 }
 
 // ---------------------------------------------------------------------------
 // $/ADC Engine  (J21-J36)
 // ---------------------------------------------------------------------------
 
-function perAdcEngine(starting, inputs, d) {
+function perAdcEngine(starting, inputs, d, overrides) {
   const factors = [
     { key: 'highEbitda',     label: 'EBITDA > 18%',           value: d.highEbitdaMargin ? 15000 : 0 },
     { key: 'con',            label: 'CON State',             value: inputs.conState === 'yes' ? 40000 : 0 },
@@ -223,14 +237,14 @@ function perAdcEngine(starting, inputs, d) {
     { key: 'esop',           label: 'ESOP',                  value: inputs.esop === 'yes' ? -10000 : 0 },
     { key: 'other',          label: 'Other',                 value: inputs.perAdcOther ?? 0 },
   ];
-  return engineResult(starting, factors);
+  return engineResult(starting, applyFactorOverrides(factors, overrides));
 }
 
 // ---------------------------------------------------------------------------
 // EBITDA Engine  (J39-J59)
 // ---------------------------------------------------------------------------
 
-function ebitdaEngine(starting, inputs, d) {
+function ebitdaEngine(starting, inputs, d, overrides) {
   const factors = [
     { key: 'cleanSurvey',   label: 'Clean Survey',       value: inputs.cleanSurvey === 'yes' ? 0.375 : 0 },
     { key: 'ebitdaAbove18',  label: 'EBITDA > 18%',       value: d.highEbitdaMargin ? 0.75 : 0 },
@@ -251,14 +265,14 @@ function ebitdaEngine(starting, inputs, d) {
     { key: 'auditRisk',     label: 'Audit Risk',           value: inputs.auditRisk === 'yes' ? -0.375 : 0 },
     { key: 'other',         label: 'Other',                value: inputs.ebitdaOther ?? 0 },
   ];
-  return engineResult(starting, factors);
+  return engineResult(starting, applyFactorOverrides(factors, overrides));
 }
 
 // ---------------------------------------------------------------------------
 // Revenue Engine  (J62-J79)
 // ---------------------------------------------------------------------------
 
-function revenueEngine(starting, inputs, d) {
+function revenueEngine(starting, inputs, d, overrides) {
   const factors = [
     { key: 'cleanSurvey',   label: 'Clean Survey',    value: inputs.cleanSurvey === 'yes' ? 0.075 : 0 },
     { key: 'noMedicaid',    label: 'No Medicaid',      value: !d.hasMcrMcd ? -0.15 : 0 },
@@ -276,14 +290,14 @@ function revenueEngine(starting, inputs, d) {
     { key: 'auditRisk',     label: 'Audit Risk',       value: inputs.auditRisk === 'yes' ? -0.075 : 0 },
     { key: 'other',         label: 'Other',            value: inputs.revenueOther ?? 0 },
   ];
-  return engineResult(starting, factors);
+  return engineResult(starting, applyFactorOverrides(factors, overrides));
 }
 
 // ---------------------------------------------------------------------------
 // Normalized EBITDA Engine  (J81-J97)
 // ---------------------------------------------------------------------------
 
-function normEbitdaEngine(starting, inputs, d) {
+function normEbitdaEngine(starting, inputs, d, overrides) {
   const factors = [
     { key: 'ebitdaAbove18',  label: 'EBITDA > 18%',           value: d.highEbitdaMargin ? 1.25 : 0 },
     { key: 'cleanNoCap',     label: 'Clean Survey + No CAP',  value: (inputs.cleanSurvey === 'yes' && !d.recurringCap) ? 0.75 : 0 },
@@ -300,5 +314,5 @@ function normEbitdaEngine(starting, inputs, d) {
     { key: 'auditRisk',      label: 'Audit Risk',             value: inputs.auditRisk === 'yes' ? -0.375 : 0 },
     { key: 'other',          label: 'Other',                  value: inputs.normEbitdaOther ?? 0 },
   ];
-  return engineResult(starting, factors);
+  return engineResult(starting, applyFactorOverrides(factors, overrides));
 }

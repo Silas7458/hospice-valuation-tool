@@ -1,9 +1,10 @@
 /**
  * App.jsx — Main layout for the Hospice Valuation Tool
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeartPulse, Shield, Eye, Settings } from 'lucide-react';
 import useValuation from './hooks/useValuation.js';
+import { getAccessLevelFromUrl } from './utils/urlState.js';
 import HospiceKPIs from './components/HospiceKPIs.jsx';
 import QualifyingFactors from './components/QualifyingFactors.jsx';
 import RateAssumptions from './components/RateAssumptions.jsx';
@@ -41,6 +42,7 @@ const ACCESS_LEVELS = [
 
 export default function App() {
   const [accessLevel, setAccessLevel] = useState('master');
+  const [lockedAccess, setLockedAccess] = useState(false);
   const {
     inputs,
     updateInput,
@@ -49,7 +51,20 @@ export default function App() {
     sensitivities,
     consensus,
     finalValuation,
+    factorOverrides,
+    updateFactorOverride,
   } = useValuation();
+
+  // On mount, check URL for locked access level
+  useEffect(() => {
+    const urlAccess = getAccessLevelFromUrl();
+    if (urlAccess && urlAccess !== 'master') {
+      setAccessLevel(urlAccess);
+      setLockedAccess(true);
+    } else if (urlAccess === 'master') {
+      setAccessLevel('master');
+    }
+  }, []);
 
   const qualityLabel = getQualityLevel(pl.patientQualityFactor);
 
@@ -63,25 +78,32 @@ export default function App() {
             <span className="text-lg font-bold">Hospice Valuation Tool</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-1">
-              {ACCESS_LEVELS.map(({ key, label, icon: Icon, color }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setAccessLevel(key)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    accessLevel === key
-                      ? `${color} text-white`
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                  title={`${label} View`}
-                >
-                  <Icon size={12} />
-                  {label}
-                </button>
-              ))}
-            </div>
-            <ShareButton inputs={inputs} />
+            {!lockedAccess && (
+              <div className="hidden md:flex items-center gap-1">
+                {ACCESS_LEVELS.map(({ key, label, icon: Icon, color }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setAccessLevel(key)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      accessLevel === key
+                        ? `${color} text-white`
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title={`${label} View`}
+                  >
+                    <Icon size={12} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {lockedAccess && (
+              <span className="text-xs text-slate-400">
+                {ACCESS_LEVELS.find(l => l.key === accessLevel)?.label} View
+              </span>
+            )}
+            <ShareButton inputs={inputs} accessLevel={accessLevel} />
           </div>
         </div>
       </header>
@@ -137,7 +159,11 @@ export default function App() {
         {/* Full-width sections */}
         <MonthlyDetail inputs={inputs} pl={pl} />
         {accessLevel !== 'client' && (
-          <SensitivityBreakdown sensitivities={sensitivities} />
+          <SensitivityBreakdown
+            sensitivities={sensitivities}
+            accessLevel={accessLevel}
+            onFactorOverride={updateFactorOverride}
+          />
         )}
         <ValuationNarrative
           pl={pl}

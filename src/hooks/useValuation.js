@@ -2,7 +2,7 @@
  * useValuation.js — Central state hook for the hospice valuation tool.
  * Uses useReducer for all user inputs, useMemo chains for derived calculations.
  */
-import { useReducer, useMemo, useEffect } from 'react';
+import { useReducer, useMemo, useEffect, useState, useCallback } from 'react';
 import { calculatePL, derivedMetrics } from '../engine/calculations.js';
 import { calculateAllSensitivities } from '../engine/sensitivity.js';
 import { getStateFromUrl } from '../utils/urlState.js';
@@ -47,6 +47,23 @@ function toEngineInputs(inputs) {
 
 export default function useValuation() {
   const [inputs, dispatch] = useReducer(inputReducer, DEFAULT_INPUTS);
+  const [factorOverrides, setFactorOverrides] = useState({});
+
+  const updateFactorOverride = useCallback((engineKey, factorKey, value) => {
+    setFactorOverrides(prev => {
+      const engineOverrides = { ...prev[engineKey] };
+      if (value === '' || value === null || value === undefined) {
+        delete engineOverrides[factorKey];
+      } else {
+        engineOverrides[factorKey] = Number(value);
+      }
+      if (Object.keys(engineOverrides).length === 0) {
+        const { [engineKey]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [engineKey]: engineOverrides };
+    });
+  }, []);
 
   // Hydrate from URL on mount
   useEffect(() => {
@@ -81,8 +98,8 @@ export default function useValuation() {
 
   // Step 4: All sensitivities, EVs, consensus
   const sensitivities = useMemo(
-    () => calculateAllSensitivities(engineInputs, pl, derived, overrides),
-    [engineInputs, pl, derived, overrides],
+    () => calculateAllSensitivities(engineInputs, pl, derived, overrides, factorOverrides),
+    [engineInputs, pl, derived, overrides, factorOverrides],
   );
 
   const consensus = sensitivities.consensus;
@@ -96,5 +113,7 @@ export default function useValuation() {
     sensitivities,
     consensus,
     finalValuation,
+    factorOverrides,
+    updateFactorOverride,
   };
 }

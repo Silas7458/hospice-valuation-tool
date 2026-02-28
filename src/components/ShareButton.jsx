@@ -1,13 +1,15 @@
 /**
- * ShareButton.jsx — Dropdown with Copy Link, Download PDF, and Email options
+ * ShareButton.jsx — Dropdown with Copy Link, Download PDF, and Email options.
+ * Encodes access level in share URLs for locked sharing.
  */
 import { useState, useRef, useEffect } from 'react';
-import { Share2, Link, FileDown, Mail } from 'lucide-react';
+import { Share2, Link, FileDown, Mail, Loader2 } from 'lucide-react';
 import { encodeState } from '../utils/urlState.js';
 
-export default function ShareButton({ inputs }) {
+export default function ShareButton({ inputs, accessLevel }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const ref = useRef(null);
 
   // Close dropdown on outside click
@@ -20,7 +22,7 @@ export default function ShareButton({ inputs }) {
   }, []);
 
   function getShareUrl() {
-    const encoded = encodeState(inputs);
+    const encoded = encodeState(inputs, accessLevel);
     return `${window.location.origin}${window.location.pathname}?v=${encoded}`;
   }
 
@@ -42,21 +44,39 @@ export default function ShareButton({ inputs }) {
   }
 
   async function handleDownloadPdf() {
+    if (pdfLoading) return;
     setOpen(false);
-    const el = document.getElementById('valuation-content');
-    if (!el) return;
-    const html2pdf = (await import('html2pdf.js')).default;
-    html2pdf()
-      .set({
-        margin: [10, 10, 10, 10],
-        filename: 'Hospice-Valuation-Report.pdf',
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-      })
-      .from(el)
-      .save();
+    setPdfLoading(true);
+
+    try {
+      const el = document.getElementById('valuation-content');
+      if (!el) return;
+
+      const html2pdf = (await import('html2pdf.js')).default;
+
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('PDF generation timed out')), 30000)
+      );
+
+      const generate = html2pdf()
+        .set({
+          margin: [10, 10, 10, 10],
+          filename: 'Hospice-Valuation-Report.pdf',
+          image: { type: 'jpeg', quality: 0.90 },
+          html2canvas: { scale: 1.5, useCORS: true, scrollY: 0, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'] },
+        })
+        .from(el)
+        .save();
+
+      await Promise.race([generate, timeout]);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('PDF generation failed. Try collapsing some sections and retry.');
+    } finally {
+      setPdfLoading(false);
+    }
   }
 
   function handleEmail() {
@@ -93,10 +113,15 @@ export default function ShareButton({ inputs }) {
           <button
             type="button"
             onClick={handleDownloadPdf}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+            disabled={pdfLoading}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
-            <FileDown size={16} className="text-slate-400" />
-            Download PDF
+            {pdfLoading ? (
+              <Loader2 size={16} className="text-slate-400 animate-spin" />
+            ) : (
+              <FileDown size={16} className="text-slate-400" />
+            )}
+            {pdfLoading ? 'Generating...' : 'Download PDF'}
           </button>
           <button
             type="button"

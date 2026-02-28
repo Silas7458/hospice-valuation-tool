@@ -1,8 +1,9 @@
 /**
- * SensitivityBreakdown.jsx — Collapsible factor-by-factor breakdown for each engine
+ * SensitivityBreakdown.jsx — Collapsible factor-by-factor breakdown for each engine.
+ * In master mode, factor values are editable inline.
  */
-import { useState } from 'react';
-import { BarChart3, ChevronDown } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { BarChart3, ChevronDown, RotateCcw } from 'lucide-react';
 import { formatMultiple, formatCurrency } from '../engine/formatting.js';
 
 const ENGINE_META = [
@@ -29,7 +30,87 @@ function colorClass(value) {
   return 'text-slate-400';
 }
 
-function EnginePanel({ engineKey, label, type, engine }) {
+function FactorRow({ engineKey, factor, type, isMaster, onOverride }) {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef(null);
+  const isOverridden = factor.overridden;
+
+  function handleClick() {
+    if (isMaster) setEditing(true);
+  }
+
+  function handleBlur(e) {
+    setEditing(false);
+    const raw = e.target.value.trim();
+    if (raw === '') {
+      onOverride(engineKey, factor.key, '');
+    } else {
+      const num = parseFloat(raw);
+      if (!isNaN(num)) onOverride(engineKey, factor.key, num);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') e.target.blur();
+    if (e.key === 'Escape') {
+      onOverride(engineKey, factor.key, '');
+      setEditing(false);
+    }
+  }
+
+  function handleReset(e) {
+    e.stopPropagation();
+    onOverride(engineKey, factor.key, '');
+  }
+
+  if (editing) {
+    return (
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-slate-500">{factor.label}</span>
+        <input
+          ref={inputRef}
+          type="number"
+          step="any"
+          defaultValue={factor.value}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          autoFocus
+          className="w-24 text-right text-sm border border-blue-400 rounded px-1.5 py-0.5 bg-blue-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`flex justify-between items-center text-sm ${isMaster ? 'cursor-pointer hover:bg-slate-100 -mx-1 px-1 rounded' : ''}`}
+      onClick={handleClick}
+    >
+      <span className="text-slate-500">{factor.label}</span>
+      <span className="flex items-center gap-1">
+        {isOverridden && isMaster && (
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-blue-400 hover:text-blue-600"
+            title="Reset to computed value"
+          >
+            <RotateCcw size={12} />
+          </button>
+        )}
+        <span
+          className={`${colorClass(factor.value)} ${isOverridden ? 'bg-blue-100 px-1 rounded' : ''}`}
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        >
+          {factor.value === 0 ? '--' : fmt(factor.value, type)}
+        </span>
+      </span>
+    </div>
+  );
+}
+
+function EnginePanel({ engineKey, label, type, engine, isMaster, onOverride }) {
   if (!engine) return null;
 
   return (
@@ -43,12 +124,14 @@ function EnginePanel({ engineKey, label, type, engine }) {
 
       <div className="space-y-1">
         {engine.factors.map((f) => (
-          <div key={f.key} className="flex justify-between text-sm">
-            <span className="text-slate-500">{f.label}</span>
-            <span className={`${colorClass(f.value)}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {f.value === 0 ? '--' : fmt(f.value, type)}
-            </span>
-          </div>
+          <FactorRow
+            key={f.key}
+            engineKey={engineKey}
+            factor={f}
+            type={type}
+            isMaster={isMaster}
+            onOverride={onOverride}
+          />
         ))}
       </div>
 
@@ -60,9 +143,10 @@ function EnginePanel({ engineKey, label, type, engine }) {
   );
 }
 
-export default function SensitivityBreakdown({ sensitivities }) {
+export default function SensitivityBreakdown({ sensitivities, accessLevel, onFactorOverride }) {
   const [open, setOpen] = useState(false);
   const { engines } = sensitivities;
+  const isMaster = accessLevel === 'master';
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
@@ -74,6 +158,7 @@ export default function SensitivityBreakdown({ sensitivities }) {
         <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
           <BarChart3 size={20} className="text-teal-600" />
           F. Sensitivity Breakdown
+          {isMaster && <span className="text-xs font-normal text-blue-500 ml-2">(click values to override)</span>}
         </h2>
         <ChevronDown
           size={20}
@@ -91,6 +176,8 @@ export default function SensitivityBreakdown({ sensitivities }) {
                 label={label}
                 type={type}
                 engine={engines[key]}
+                isMaster={isMaster}
+                onOverride={onFactorOverride || (() => {})}
               />
             ))}
           </div>
