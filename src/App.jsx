@@ -58,7 +58,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main id="valuation-content" className="max-w-7xl mx-auto px-4 py-6">
         {/* Hero Metric Bar */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <HeroCard label="Final Enterprise Value" value={formatCurrency(finalValuation)} />
@@ -94,6 +94,7 @@ export default function App() {
               sensitivities={sensitivities}
               consensus={consensus}
               finalValuation={finalValuation}
+              yearlyAdc={inputs.yearlyAdc}
             />
             <ProfitLoss pl={pl} />
             <ValuationMultiples

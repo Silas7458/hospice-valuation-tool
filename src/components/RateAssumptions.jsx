@@ -91,6 +91,24 @@ export default function RateAssumptions({ inputs, updateInput, pl }) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <PctInput label="Below-the-Line %" value={inputs.btlPct} onChange={(v) => updateInput('btlPct', v)} />
             <PctInput label="Sequestration Rate" value={inputs.sequestrationRate} onChange={(v) => updateInput('sequestrationRate', v)} />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Norm. Adjustment ($)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="Non-recurring add-back"
+                  value={inputs.normAdjustment || ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '');
+                    updateInput('normAdjustment', raw === '' ? 0 : parseFloat(raw));
+                  }}
+                  className="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Adjusts Norm EBITDA basis only</p>
+            </div>
           </div>
         </div>
       )}

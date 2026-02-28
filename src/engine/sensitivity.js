@@ -40,7 +40,8 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   const evSde        = sdeMultiple * pl.sde;
   const evEbitda     = ebitdaMultiple * pl.ebitda;
   const evRevenue    = revenueMultiple * pl.netRevenue;
-  const evNormEbitda = normEbitdaMultiple * pl.ebitda; // same EBITDA basis
+  const normEbitdaBasis = pl.ebitda + (inputs.normAdjustment || 0);
+  const evNormEbitda = normEbitdaMultiple * normEbitdaBasis;
 
   // --- Consensus (4-method average) ---
   const consensus = (evSde + evEbitda + evRevenue + evNormEbitda) / 4;
@@ -116,6 +117,9 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
     midAdj,
     highAdj,
     finalEv,
+
+    // Norm EBITDA adjusted basis
+    normEbitdaBasis,
 
     // Harmonization
     harmonizationGap,

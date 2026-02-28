@@ -1,23 +1,25 @@
 /**
  * ValuationSummary.jsx — Main results panel showing EV by method, consensus, and final value
  */
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency, formatPercent, formatMultiple } from '../engine/formatting.js';
+import { getMarketAdcRange } from '../engine/tiers.js';
 
 const METHODS = [
   { key: 'sde',        label: 'SDE',               basisKey: 'sde',        basisLabel: 'SDE' },
   { key: 'ebitda',     label: 'EBITDA-A',          basisKey: 'ebitda',     basisLabel: 'EBITDA' },
   { key: 'revenue',    label: 'Revenue',           basisKey: 'netRevenue', basisLabel: 'Net Revenue' },
-  { key: 'normEbitda', label: 'Norm EBITDA',        basisKey: 'ebitda',     basisLabel: 'EBITDA' },
+  { key: 'normEbitda', label: 'Norm EBITDA',        basisKey: 'normEbitda', basisLabel: 'Adj. EBITDA' },
 ];
 
-export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation }) {
+export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation, yearlyAdc }) {
   const { multiples, ev, capAdj, trailingCapLiability, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
 
   const basisValues = {
     sde: pl.sde,
     ebitda: pl.ebitda,
     netRevenue: pl.netRevenue,
+    normEbitda: sensitivities.normEbitdaBasis,
   };
 
   return (
@@ -73,10 +75,30 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
         <div className="text-2xl font-bold text-teal-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(consensus)}</div>
       </div>
 
-      {/* $/ADC back-calculated */}
-      <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
-        <span className="text-slate-500">$/ADC (Back-Calculated)</span>
-        <span className="font-semibold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(perAdcBackCalculated)}</span>
+      {/* $/ADC back-calculated with market indicator */}
+      {(() => {
+        const range = getMarketAdcRange(yearlyAdc || 0);
+        const withinMarket = perAdcBackCalculated >= range.low && perAdcBackCalculated <= range.high;
+        return (
+          <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
+            <span className="text-slate-500">$/ADC (Back-Calculated)</span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(perAdcBackCalculated)}</span>
+              {withinMarket ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                  <CheckCircle size={12} /> In Range
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                  <AlertTriangle size={12} /> Outside
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+      <div className="text-xs text-slate-400 -mt-2 mb-3 px-4">
+        Market range: {formatCurrency(getMarketAdcRange(yearlyAdc || 0).low)} &ndash; {formatCurrency(getMarketAdcRange(yearlyAdc || 0).high)}
       </div>
 
       {/* CAP Adjustment */}

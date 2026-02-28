@@ -5,6 +5,18 @@
  * with the starting (base) multiple for every method given a census (ADC).
  */
 
+/**
+ * Market $/ADC range for the "within model" indicator.
+ * Returns { low, high } for the given ADC tier.
+ */
+export function getMarketAdcRange(adc) {
+  if (adc < 10)  return { low: 15000,  high: 40000 };
+  if (adc < 30)  return { low: 40000,  high: 90000 };
+  if (adc < 60)  return { low: 55000,  high: 110000 };
+  if (adc < 150) return { low: 100000, high: 200000 };
+  return { low: 150000, high: 280000 };
+}
+
 export function getStartingMultiples(adc) {
   return {
     sde:        sdeTier(adc),

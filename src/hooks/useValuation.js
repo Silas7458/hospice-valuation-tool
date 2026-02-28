@@ -19,6 +19,7 @@ const DEFAULT_INPUTS = {
   staffCostPct: 0.65, patientCostPct: 0.10, opsCostPct: 0.10,
   btlPct: 0.10, sequestrationRate: 0.02, pctCollected30Days: 0.98,
   overrideSde: '', overrideEbitda: '', overrideRevenue: '', overrideNormEbitda: '', overridePerAdc: '',
+  normAdjustment: 0,
   sdeOther: 0, perAdcOther: 0, ebitdaOther: 0, revenueOther: 0, normEbitdaOther: 0,
 };
 
