@@ -110,7 +110,7 @@ export default function App() {
           {/* Left column — Inputs */}
           <div>
             <HospiceKPIs inputs={inputs} updateInput={updateInput} pl={pl} />
-            <QualifyingFactors inputs={inputs} updateInput={updateInput} capAutoTriggered={sensitivities.capSensitivityTier !== 'none'} ebitdaAutoTriggered={sensitivities.ebitdaAutoTriggered} />
+            <QualifyingFactors inputs={inputs} updateInput={updateInput} capAutoTriggered={sensitivities.capSensitivityTier !== 'none'} ebitdaAutoTriggered={sensitivities.ebitdaAutoTriggered} liveDcAutoTriggered={sensitivities.liveDcAutoTriggered} />
             <RateAssumptions inputs={inputs} updateInput={updateInput} pl={pl} />
           </div>
 

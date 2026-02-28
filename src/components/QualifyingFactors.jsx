@@ -45,7 +45,7 @@ const FACTORS = [
   { key: 'recurringCapLiability', label: 'Recurring CAP Liability (Annual Risk)' },
 ];
 
-export default function QualifyingFactors({ inputs, updateInput, capAutoTriggered, ebitdaAutoTriggered }) {
+export default function QualifyingFactors({ inputs, updateInput, capAutoTriggered, ebitdaAutoTriggered, liveDcAutoTriggered }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
       <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -55,7 +55,7 @@ export default function QualifyingFactors({ inputs, updateInput, capAutoTriggere
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         {FACTORS.map(({ key, label }) => {
-          const isAuto = (key === 'recurringCapLiability' && capAutoTriggered) || (key === 'highEbitdaMargin' && ebitdaAutoTriggered);
+          const isAuto = (key === 'recurringCapLiability' && capAutoTriggered) || (key === 'highEbitdaMargin' && ebitdaAutoTriggered) || (key === 'highLiveDc' && liveDcAutoTriggered);
           return (
             <div key={key} className={`flex items-center justify-between rounded-lg px-3 py-2 ${
               isAuto ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'

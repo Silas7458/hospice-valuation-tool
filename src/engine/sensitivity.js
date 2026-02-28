@@ -34,12 +34,18 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   // Auto-trigger EBITDA > 18% based on actual margin
   const ebitdaAutoTriggered = pl.ebitdaMargin > 0.18;
 
+  // Auto-trigger High Live Discharge Rate: (DCs - Deaths) / ADC >= 10%
+  const liveDcCount = (inputs.dcRateToAdc - inputs.deathRateToAdc) * inputs.yearlyAdc;
+  const liveDcPct = inputs.yearlyAdc > 0 ? liveDcCount / inputs.yearlyAdc : 0;
+  const liveDcAutoTriggered = liveDcPct >= 0.10;
+
   // Override derived flags based on thresholds
   const derivedWithCap = {
     ...derived,
     recurringCap: capSensitivityTier !== 'none',
     capSensitivityTier,
     highEbitdaMargin: ebitdaAutoTriggered || derived.highEbitdaMargin,
+    highLiveDc: liveDcAutoTriggered || inputs.highLiveDc === 'yes',
   };
 
   // --- Run each engine ---
@@ -131,6 +137,7 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
     capPctOfRevenue,
     capSensitivityTier,
     ebitdaAutoTriggered,
+    liveDcAutoTriggered,
 
     // CAP-adjusted range
     lowAdj,
@@ -232,7 +239,7 @@ function ebitdaEngine(starting, inputs, d) {
     { key: 'staffRetention',label: 'Staff Retention',      value: d.staffRetention ? 0.375 : 0 },
     { key: 'capRisk',       label: 'CAP Risk',             value: d.recurringCap ? -0.375 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'capSurplus',    label: 'CAP Surplus > $8k',    value: d.capSurplus8k ? 0.2 : 0 },
-    { key: 'auditHighDc',   label: 'Audit / High Live DC', value: (d.auditExposure || inputs.highLiveDc === 'yes') ? -0.375 : 0 },
+    { key: 'auditHighDc',   label: 'Audit / High Live DC', value: (d.auditExposure || d.highLiveDc) ? -0.375 : 0 },
     { key: 'weakRcmLarge',  label: 'Weak RCM (ADC>25)',    value: (inputs.strongRcm !== 'yes' && inputs.yearlyAdc > 25) ? -0.375 : 0 },
     { key: 'highTurnover',  label: 'High Turnover',        value: inputs.staffTurnoverHigh === 'yes' ? -0.375 : 0 },
     { key: 'highAlos',      label: 'High ALOS',            value: inputs.highAlos === 'yes' ? -0.225 : 0 },
@@ -256,7 +263,7 @@ function revenueEngine(starting, inputs, d) {
     { key: 'cleanSurvey',   label: 'Clean Survey',    value: inputs.cleanSurvey === 'yes' ? 0.075 : 0 },
     { key: 'noMedicaid',    label: 'No Medicaid',      value: !d.hasMcrMcd ? -0.15 : 0 },
     { key: 'capRisk',       label: 'CAP Risk',         value: d.recurringCap ? -0.115 * capTierMultiplier(d.capSensitivityTier) : 0 },
-    { key: 'highLiveDc',    label: 'High Live DC',     value: inputs.highLiveDc === 'yes' ? -0.115 : 0 },
+    { key: 'highLiveDc',    label: 'High Live DC',     value: d.highLiveDc ? -0.115 : 0 },
     { key: 'highGip',       label: 'High GIP',         value: inputs.highGip === 'yes' ? 0.1 : 0 },
     { key: 'strongRcm',     label: 'Strong RCM',       value: inputs.strongRcm === 'yes' ? 0.075 : 0 },
     { key: 'ads',           label: 'ADS',              value: (inputs.viableAds ?? 0) * 0.085 },
