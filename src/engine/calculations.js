@@ -107,7 +107,7 @@ export function derivedMetrics(pl, inputs) {
     ebitdaBelow8:   pl.ebitdaMargin < 0.08,
     capSurplus8k:   pl.capPerPatient > 8000,
     hasMcrMcd:      inputs.mcrMcdLicense === 'yes',
-    recurringCap:   inputs.priorCapLiabilities === 'yes',
+    recurringCap:   inputs.recurringCapLiability === 'yes',
     auditExposure:  inputs.auditExposure === 'yes',
     adcBelow30:     inputs.yearlyAdc < 30,
     staffRetention: inputs.staffTurnoverHigh === 'no',
