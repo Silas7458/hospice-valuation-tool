@@ -88,8 +88,8 @@ export default function App() {
       <main id="valuation-content" className="max-w-7xl mx-auto px-4 py-6">
         {/* Hero Metric Bar */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <HeroCard label="Final EV (Market-Adjusted)" value={formatCurrency(finalValuation)} />
           <HeroCard label="Consensus EV (Pre-Adjustment)" value={formatCurrency(consensus)} />
+          <HeroCard label="Final EV (Market-Adjusted)" value={formatCurrency(finalValuation)} />
           <HeroCard
             label="$/ADC"
             value={formatCurrency(sensitivities.perAdcBackCalculated)}
@@ -110,7 +110,7 @@ export default function App() {
           {/* Left column — Inputs */}
           <div>
             <HospiceKPIs inputs={inputs} updateInput={updateInput} pl={pl} />
-            <QualifyingFactors inputs={inputs} updateInput={updateInput} />
+            <QualifyingFactors inputs={inputs} updateInput={updateInput} capAutoTriggered={sensitivities.capSensitivityTier !== 'none'} />
             <RateAssumptions inputs={inputs} updateInput={updateInput} pl={pl} />
           </div>
 

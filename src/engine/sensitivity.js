@@ -23,12 +23,27 @@ import { getStartingMultiples } from './tiers.js';
 export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   const starting = getStartingMultiples(inputs.yearlyAdc);
 
+  // --- CAP liability as % of gross revenue → graduated sensitivity tier ---
+  const capEstimate = Math.abs((pl.acdriV2 + pl.acdriV4) / 2);
+  const capPctOfRevenue = pl.grossRevenue > 0 ? (capEstimate / pl.grossRevenue) * 100 : 0;
+  let capSensitivityTier = 'none'; // none | low | medium | high
+  if (capPctOfRevenue > 12) capSensitivityTier = 'high';
+  else if (capPctOfRevenue > 8) capSensitivityTier = 'medium';
+  else if (capPctOfRevenue > 3) capSensitivityTier = 'low';
+
+  // Override the recurring CAP flag in derived based on threshold
+  const derivedWithCap = {
+    ...derived,
+    recurringCap: capSensitivityTier !== 'none',
+    capSensitivityTier,
+  };
+
   // --- Run each engine ---
-  const sdeResult        = sdeEngine(starting.sde, inputs, derived);
-  const perAdcResult     = perAdcEngine(starting.perAdc, inputs, derived);
-  const ebitdaResult     = ebitdaEngine(starting.ebitda, inputs, derived);
-  const revenueResult    = revenueEngine(starting.revenue, inputs, derived);
-  const normEbitdaResult = normEbitdaEngine(starting.normEbitda, inputs, derived);
+  const sdeResult        = sdeEngine(starting.sde, inputs, derivedWithCap);
+  const perAdcResult     = perAdcEngine(starting.perAdc, inputs, derivedWithCap);
+  const ebitdaResult     = ebitdaEngine(starting.ebitda, inputs, derivedWithCap);
+  const revenueResult    = revenueEngine(starting.revenue, inputs, derivedWithCap);
+  const normEbitdaResult = normEbitdaEngine(starting.normEbitda, inputs, derivedWithCap);
 
   // --- Apply overrides (F60-F64) ---
   const sdeMultiple        = overrides.sde        ?? sdeResult.total;
@@ -55,17 +70,15 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   const mid  = consensus;
   const high = Math.max(evSde, evEbitda, evRevenue, evNormEbitda);
 
-  // --- CAP adjustment (H75) ---
+  // --- CAP info (display only — no longer a direct dollar deduction) ---
   const capAdj = (pl.acdriV2 + pl.acdriV4) / 2;
-
-  // --- Trailing CAP liability deduction (only when a dollar amount is entered) ---
   const trailingCapLiability = (inputs.priorCapLiabilities === 'yes' && inputs.capLiabilityAmount > 0) ? inputs.capLiabilityAmount : 0;
 
-  // --- Final adjusted values ---
-  const lowAdj   = low + capAdj - trailingCapLiability;
-  const midAdj   = mid + capAdj - trailingCapLiability;
-  const highAdj  = high + capAdj - trailingCapLiability;
-  const finalEv  = mid + capAdj - trailingCapLiability;
+  // --- Final adjusted values (CAP flows through sensitivity engines, not as line-item) ---
+  const lowAdj   = low;
+  const midAdj   = mid;
+  const highAdj  = high;
+  const finalEv  = mid;
 
   // --- Harmonization gap ---
   const harmonizationGap    = Math.abs(evEbitda - evRevenue);
@@ -108,9 +121,11 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
     consensus,
     perAdcBackCalculated,
 
-    // CAP adjustment
+    // CAP info (informational — flows through sensitivity engines, not line-item)
     capAdj,
     trailingCapLiability,
+    capPctOfRevenue,
+    capSensitivityTier,
 
     // CAP-adjusted range
     lowAdj,
@@ -145,13 +160,21 @@ function engineResult(starting, factors) {
   };
 }
 
+/** Scale a base CAP penalty by the graduated tier */
+function capTierMultiplier(tier) {
+  if (tier === 'high') return 2.0;
+  if (tier === 'medium') return 1.5;
+  if (tier === 'low') return 1.0;
+  return 0;
+}
+
 // ---------------------------------------------------------------------------
 // SDE Engine  (J3-J17)
 // ---------------------------------------------------------------------------
 
 function sdeEngine(starting, inputs, d) {
   const factors = [
-    { key: 'capRisk',        label: 'CAP Risk',         value: d.recurringCap ? -0.375 : 0 },
+    { key: 'capRisk',        label: 'CAP Risk',         value: d.recurringCap ? -0.375 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'cleanSurvey',    label: 'Clean Survey',     value: inputs.cleanSurvey === 'yes' ? 0.375 : 0 },
     { key: 'mcrMcd',         label: 'R&B + Medicaid',   value: d.hasMcrMcd ? 0.375 : 0 },
     { key: 'pureMedicare',   label: '100% Medicare',    value: inputs.pureMedicare === 'yes' ? -0.175 : 0 },
@@ -174,7 +197,7 @@ function sdeEngine(starting, inputs, d) {
 function perAdcEngine(starting, inputs, d) {
   const factors = [
     { key: 'con',            label: 'CON State',             value: inputs.conState === 'yes' ? 40000 : 0 },
-    { key: 'cap',            label: 'CAP Risk',              value: d.recurringCap ? -27500 : 0 },
+    { key: 'cap',            label: 'CAP Risk',              value: d.recurringCap ? -27500 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'auditRisk',      label: 'Audit Risk',            value: inputs.auditRisk === 'yes' ? -20000 : 0 },
     { key: 'noMedicaid',     label: 'No Medicaid',           value: !d.hasMcrMcd ? -17500 : 0 },
     { key: 'hospitalRels',   label: 'Hospital Relationships',value: inputs.hospitalRels === 'yes' ? 12000 : 0 },
@@ -200,7 +223,7 @@ function ebitdaEngine(starting, inputs, d) {
     { key: 'strongRcm',     label: 'Strong RCM',          value: inputs.strongRcm === 'yes' ? 0.5 : 0 },
     { key: 'noMedicaid',    label: 'No Medicaid',          value: !d.hasMcrMcd ? -0.75 : 0 },
     { key: 'staffRetention',label: 'Staff Retention',      value: d.staffRetention ? 0.375 : 0 },
-    { key: 'capRisk',       label: 'CAP Risk',             value: d.recurringCap ? -0.375 : 0 },
+    { key: 'capRisk',       label: 'CAP Risk',             value: d.recurringCap ? -0.375 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'capSurplus',    label: 'CAP Surplus > $8k',    value: d.capSurplus8k ? 0.2 : 0 },
     { key: 'auditHighDc',   label: 'Audit / High Live DC', value: (d.auditExposure || inputs.highLiveDc === 'yes') ? -0.375 : 0 },
     { key: 'weakRcmLarge',  label: 'Weak RCM (ADC>25)',    value: (inputs.strongRcm !== 'yes' && inputs.yearlyAdc > 25) ? -0.375 : 0 },
@@ -225,7 +248,7 @@ function revenueEngine(starting, inputs, d) {
   const factors = [
     { key: 'cleanSurvey',   label: 'Clean Survey',    value: inputs.cleanSurvey === 'yes' ? 0.075 : 0 },
     { key: 'noMedicaid',    label: 'No Medicaid',      value: !d.hasMcrMcd ? -0.15 : 0 },
-    { key: 'capRisk',       label: 'CAP Risk',         value: d.recurringCap ? -0.115 : 0 },
+    { key: 'capRisk',       label: 'CAP Risk',         value: d.recurringCap ? -0.115 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'highLiveDc',    label: 'High Live DC',     value: inputs.highLiveDc === 'yes' ? -0.115 : 0 },
     { key: 'highGip',       label: 'High GIP',         value: inputs.highGip === 'yes' ? 0.1 : 0 },
     { key: 'strongRcm',     label: 'Strong RCM',       value: inputs.strongRcm === 'yes' ? 0.075 : 0 },
@@ -252,7 +275,7 @@ function normEbitdaEngine(starting, inputs, d) {
     { key: 'cleanNoCap',     label: 'Clean Survey + No CAP',  value: (inputs.cleanSurvey === 'yes' && !d.recurringCap) ? 0.75 : 0 },
     { key: 'ads1',           label: 'ADS (primary)',           value: (inputs.viableAds ?? 0) * 0.75 },
     { key: 'adcBelow30',     label: 'ADC < 30',               value: d.adcBelow30 ? -1.0 : 0 },
-    { key: 'capOrAudit',     label: 'CAP / Audit Exposure',   value: (d.recurringCap || d.auditExposure) ? -1.5 : 0 },
+    { key: 'capOrAudit',     label: 'CAP / Audit Exposure',   value: (d.recurringCap || d.auditExposure) ? -1.5 * (d.recurringCap ? capTierMultiplier(d.capSensitivityTier) : 1) : 0 },
     { key: 'weakRcmLarge',   label: 'Weak RCM (ADC>25)',      value: (inputs.strongRcm !== 'yes' && inputs.yearlyAdc > 25) ? -0.75 : 0 },
     { key: 'auditExposure',  label: 'Audit Exposure',         value: d.auditExposure ? -0.375 : 0 },
     { key: 'pureMedicare',   label: '100% Medicare',          value: inputs.pureMedicare === 'yes' ? -0.175 : 0 },

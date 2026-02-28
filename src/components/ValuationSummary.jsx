@@ -13,7 +13,7 @@ const METHODS = [
 ];
 
 export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation, yearlyAdc }) {
-  const { multiples, ev, capAdj, trailingCapLiability, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
+  const { multiples, ev, capAdj, capPctOfRevenue, capSensitivityTier, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
 
   const basisValues = {
     sde: pl.sde,
@@ -101,24 +101,22 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
         Market range: {formatCurrency(getMarketAdcRange(yearlyAdc || 0).low)} &ndash; {formatCurrency(getMarketAdcRange(yearlyAdc || 0).high)}
       </div>
 
-      {/* CAP Adjustment */}
+      {/* CAP Risk Indicator */}
       <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
-        <span className="text-slate-500">CAP Adjustment</span>
-        <span className={`font-semibold ${
-          capAdj >= 0 ? 'text-emerald-600' : 'text-rose-600'
-        }`} style={{ fontVariantNumeric: 'tabular-nums' }}>
-          {capAdj >= 0 ? '+' : ''}{formatCurrency(capAdj)}
-          <span className="text-xs ml-1">({capAdj >= 0 ? 'surplus' : 'liability'})</span>
-        </span>
-      </div>
-
-      {/* Trailing CAP Liability */}
-      {trailingCapLiability > 0 && (
-        <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
-          <span className="text-slate-500">Trailing CAP Liability Deduction</span>
-          <span className="font-semibold text-rose-600" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            -{formatCurrency(trailingCapLiability)}
+        <span className="text-slate-500">Estimated CAP Position</span>
+        <div className="flex items-center gap-2">
+          <span className={`font-semibold ${capAdj >= 0 ? 'text-emerald-600' : 'text-rose-600'}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {formatCurrency(Math.abs(capAdj))}
+            <span className="text-xs ml-1">({capAdj >= 0 ? 'surplus' : 'liability'})</span>
           </span>
+          <span className="text-xs text-slate-400">({formatPercent(capPctOfRevenue / 100)} of revenue)</span>
+        </div>
+      </div>
+      {capSensitivityTier !== 'none' && (
+        <div className={`text-xs px-4 -mt-2 mb-3 font-medium ${
+          capSensitivityTier === 'high' ? 'text-rose-600' : capSensitivityTier === 'medium' ? 'text-amber-600' : 'text-yellow-600'
+        }`}>
+          CAP risk ({capSensitivityTier}) applied as sensitivity adjustment across all engines
         </div>
       )}
 
@@ -140,7 +138,7 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
 
       {/* Final EV */}
       <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl px-6 py-5 text-center">
-        <div className="text-sm text-emerald-700 font-medium mb-1">Final Enterprise Value <span className="text-emerald-500 font-normal">(consensus + CAP position &minus; trailing debt)</span></div>
+        <div className="text-sm text-emerald-700 font-medium mb-1">Final Enterprise Value <span className="text-emerald-500 font-normal">(consensus with sensitivity adjustments)</span></div>
         <div className="text-3xl font-bold text-emerald-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(finalValuation)}</div>
       </div>
     </div>

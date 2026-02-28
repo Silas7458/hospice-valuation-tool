@@ -44,7 +44,7 @@ const FACTORS = [
   { key: 'recurringCapLiability', label: 'Recurring CAP Liability (Annual Risk)' },
 ];
 
-export default function QualifyingFactors({ inputs, updateInput }) {
+export default function QualifyingFactors({ inputs, updateInput, capAutoTriggered }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
       <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -54,9 +54,16 @@ export default function QualifyingFactors({ inputs, updateInput }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         {FACTORS.map(({ key, label }) => (
-          <div key={key} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
-            <span className="text-sm text-slate-700 mr-2">{label}</span>
-            <Toggle value={inputs[key]} onChange={(v) => updateInput(key, v)} />
+          <div key={key} className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+            key === 'recurringCapLiability' && capAutoTriggered ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'
+          }`}>
+            <span className="text-sm text-slate-700 mr-2">
+              {label}
+              {key === 'recurringCapLiability' && capAutoTriggered && (
+                <span className="ml-1 text-xs font-medium text-amber-600">(Auto)</span>
+              )}
+            </span>
+            <Toggle value={key === 'recurringCapLiability' && capAutoTriggered ? 'yes' : inputs[key]} onChange={(v) => updateInput(key, v)} />
           </div>
         ))}
       </div>
