@@ -31,11 +31,15 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   else if (capPctOfRevenue > 8) capSensitivityTier = 'medium';
   else if (capPctOfRevenue > 3) capSensitivityTier = 'low';
 
-  // Override the recurring CAP flag in derived based on threshold
+  // Auto-trigger EBITDA > 18% based on actual margin
+  const ebitdaAutoTriggered = pl.ebitdaMargin > 0.18;
+
+  // Override derived flags based on thresholds
   const derivedWithCap = {
     ...derived,
     recurringCap: capSensitivityTier !== 'none',
     capSensitivityTier,
+    highEbitdaMargin: ebitdaAutoTriggered || derived.highEbitdaMargin,
   };
 
   // --- Run each engine ---
@@ -126,6 +130,7 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
     trailingCapLiability,
     capPctOfRevenue,
     capSensitivityTier,
+    ebitdaAutoTriggered,
 
     // CAP-adjusted range
     lowAdj,
