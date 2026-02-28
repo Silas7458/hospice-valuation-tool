@@ -42,13 +42,13 @@ export function calculatePL(inputs) {
 
   // --- ACDRI / CAP risk ---
   const acdriV2 =
-    (inputs.deathRateToAdc * 100 - 13.8) * inputs.yearlyAdc * 3567;
+    (13.8 - inputs.deathRateToAdc * 100) * inputs.yearlyAdc * 450;
 
   const acdriV4 =
-    (inputs.deathRateToAdc * 100 - 13.8) *
+    (13.8 - inputs.deathRateToAdc * 100) *
     patientQualityFactor *
     inputs.yearlyAdc *
-    3567;
+    450;
 
   const capPerPatient =
     inputs.yearlyAdc !== 0
