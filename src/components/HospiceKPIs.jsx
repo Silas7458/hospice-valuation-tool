@@ -31,14 +31,22 @@ function Toggle({ value, onChange }) {
 }
 
 function NumberInput({ label, value, onChange, step = 1, min, max, className = '' }) {
+  const [text, setText] = useState(null);
   return (
     <div className={className}>
       <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
       <input
         type="text"
         inputMode="decimal"
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value.replace(/[^0-9.\-]/g, '')) || 0)}
+        value={text !== null ? text : value}
+        onFocus={() => setText(String(value))}
+        onBlur={() => setText(null)}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/[^0-9.\-]/g, '');
+          setText(raw);
+          const n = parseFloat(raw);
+          if (!isNaN(n)) onChange(n);
+        }}
         className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
       />
     </div>
@@ -164,11 +172,11 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
 
       {/* Rates — enter rate (%) OR count, either updates the other */}
       <div className="space-y-2 mb-6">
-        <p className="text-xs text-slate-400">Enter rate (%) or count — the other calculates automatically</p>
+        <p className="text-xs text-slate-400">Enter rate (%) or avg monthly count — the other calculates automatically</p>
         {[
-          { rateKey: 'admitRateToAdc', label: 'Admit', countLabel: 'Admits/Yr' },
-          { rateKey: 'dcRateToAdc', label: 'DC', countLabel: 'DCs/Yr' },
-          { rateKey: 'deathRateToAdc', label: 'Death', countLabel: 'Deaths/Yr' },
+          { rateKey: 'admitRateToAdc', label: 'Admit', countLabel: 'Avg Admits/Mo/Yr' },
+          { rateKey: 'dcRateToAdc', label: 'DC', countLabel: 'Avg DCs/Mo/Yr' },
+          { rateKey: 'deathRateToAdc', label: 'Death', countLabel: 'Avg Deaths/Mo/Yr' },
         ].map(({ rateKey, label, countLabel }) => (
           <RateCountRow
             key={rateKey}

@@ -174,6 +174,7 @@ function capTierMultiplier(tier) {
 
 function sdeEngine(starting, inputs, d) {
   const factors = [
+    { key: 'highEbitda',     label: 'EBITDA > 18%',     value: d.highEbitdaMargin ? 0.375 : 0 },
     { key: 'capRisk',        label: 'CAP Risk',         value: d.recurringCap ? -0.375 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'cleanSurvey',    label: 'Clean Survey',     value: inputs.cleanSurvey === 'yes' ? 0.375 : 0 },
     { key: 'mcrMcd',         label: 'R&B + Medicaid',   value: d.hasMcrMcd ? 0.375 : 0 },
@@ -196,6 +197,7 @@ function sdeEngine(starting, inputs, d) {
 
 function perAdcEngine(starting, inputs, d) {
   const factors = [
+    { key: 'highEbitda',     label: 'EBITDA > 18%',           value: d.highEbitdaMargin ? 15000 : 0 },
     { key: 'con',            label: 'CON State',             value: inputs.conState === 'yes' ? 40000 : 0 },
     { key: 'cap',            label: 'CAP Risk',              value: d.recurringCap ? -27500 * capTierMultiplier(d.capSensitivityTier) : 0 },
     { key: 'auditRisk',      label: 'Audit Risk',            value: inputs.auditRisk === 'yes' ? -20000 : 0 },
@@ -219,7 +221,7 @@ function perAdcEngine(starting, inputs, d) {
 function ebitdaEngine(starting, inputs, d) {
   const factors = [
     { key: 'cleanSurvey',   label: 'Clean Survey',       value: inputs.cleanSurvey === 'yes' ? 0.375 : 0 },
-    { key: 'ebitdaAbove20',  label: 'EBITDA > 20%',       value: d.ebitdaAbove20 ? 0.75 : 0 },
+    { key: 'ebitdaAbove18',  label: 'EBITDA > 18%',       value: d.highEbitdaMargin ? 0.75 : 0 },
     { key: 'strongRcm',     label: 'Strong RCM',          value: inputs.strongRcm === 'yes' ? 0.5 : 0 },
     { key: 'noMedicaid',    label: 'No Medicaid',          value: !d.hasMcrMcd ? -0.75 : 0 },
     { key: 'staffRetention',label: 'Staff Retention',      value: d.staffRetention ? 0.375 : 0 },
@@ -271,7 +273,7 @@ function revenueEngine(starting, inputs, d) {
 
 function normEbitdaEngine(starting, inputs, d) {
   const factors = [
-    { key: 'ebitdaAbove20',  label: 'EBITDA > 20%',           value: d.ebitdaAbove20 ? 1.25 : 0 },
+    { key: 'ebitdaAbove18',  label: 'EBITDA > 18%',           value: d.highEbitdaMargin ? 1.25 : 0 },
     { key: 'cleanNoCap',     label: 'Clean Survey + No CAP',  value: (inputs.cleanSurvey === 'yes' && !d.recurringCap) ? 0.75 : 0 },
     { key: 'ads1',           label: 'ADS (primary)',           value: (inputs.viableAds ?? 0) * 0.75 },
     { key: 'adcBelow30',     label: 'ADC < 30',               value: d.adcBelow30 ? -1.0 : 0 },

@@ -100,7 +100,6 @@ function calcPatientQualityFactor(inputs) {
  */
 export function derivedMetrics(pl, inputs) {
   return {
-    ebitdaAbove20:  pl.ebitdaMargin > 0.20,
     ebitdaAbove18:  pl.ebitdaMargin > 0.18,
     ebitdaBelow12:  pl.ebitdaMargin < 0.12,
     ebitdaBelow10:  pl.ebitdaMargin < 0.10,
@@ -111,5 +110,6 @@ export function derivedMetrics(pl, inputs) {
     auditExposure:  inputs.auditExposure === 'yes',
     adcBelow30:     inputs.yearlyAdc < 30,
     staffRetention: inputs.staffTurnoverHigh === 'no',
+    highEbitdaMargin: inputs.highEbitdaMargin === 'yes',
   };
 }
