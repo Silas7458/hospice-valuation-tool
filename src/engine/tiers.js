@@ -21,7 +21,7 @@ function sdeTier(adc) {
   if (adc < 20)  return 3;
   if (adc < 50)  return 4;
   if (adc < 100) return 5.25;
-  return 0;
+  return 6.5;
 }
 
 function perAdcTier(adc) {

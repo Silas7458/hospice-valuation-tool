@@ -2,6 +2,7 @@
  * MonthlyDetail.jsx — Collapsible 12-month P&L grid
  */
 import { useState } from 'react';
+import { Calendar, ChevronDown } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../engine/formatting.js';
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -51,53 +52,54 @@ export default function MonthlyDetail({ inputs, pl }) {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow mb-6">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-6 py-4 text-left"
       >
-        <h2 className="text-lg font-semibold text-gray-900">G. Monthly P&amp;L Detail</h2>
-        <svg
-          className={`w-5 h-5 text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <Calendar size={20} className="text-teal-600" />
+          G. Monthly P&amp;L Detail
+        </h2>
+        <ChevronDown
+          size={20}
+          className={`text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {open && (
-        <div className="px-6 pb-6 border-t border-gray-100 pt-4 overflow-x-auto">
+        <div className="px-6 pb-6 border-t border-slate-100 pt-4 overflow-x-auto">
           <table className="min-w-[900px] w-full text-xs">
             <thead>
-              <tr className="border-b-2 border-gray-200">
-                <th className="text-left py-2 pr-4 text-gray-600 font-medium sticky left-0 bg-white min-w-[120px]">
+              <tr className="border-b-2 border-slate-200">
+                <th className="text-left py-2 pr-4 text-slate-500 font-medium sticky left-0 bg-white min-w-[120px]">
                   Line Item
                 </th>
                 {MONTH_NAMES.map((m) => (
-                  <th key={m} className="text-right py-2 px-2 text-gray-600 font-medium">{m}</th>
+                  <th key={m} className="text-right py-2 px-2 text-slate-500 font-medium">{m}</th>
                 ))}
-                <th className="text-right py-2 px-2 text-gray-800 font-bold">Annual</th>
+                <th className="text-right py-2 px-2 text-slate-800 font-bold">Annual</th>
               </tr>
             </thead>
             <tbody>
               {rows.map(({ label, key, format, negative, bold }) => (
-                <tr key={key} className={`border-t border-gray-100 ${bold ? 'bg-gray-50' : ''}`}>
-                  <td className={`py-1.5 pr-4 text-gray-700 sticky left-0 ${bold ? 'font-bold bg-gray-50' : 'bg-white'}`}>
+                <tr key={key} className={`border-t border-slate-100 ${bold ? 'bg-slate-50' : 'even:bg-slate-50'} hover:bg-slate-100`}>
+                  <td className={`py-1.5 pr-4 text-slate-700 sticky left-0 ${bold ? 'font-bold bg-slate-50' : 'bg-white'}`}>
                     {label}
                   </td>
                   {months.map((m, i) => {
                     const val = m[key];
-                    const color = negative && val < 0 ? 'text-red-600' : 'text-gray-800';
+                    const color = negative && val < 0 ? 'text-rose-600' : 'text-slate-800';
                     return (
-                      <td key={i} className={`py-1.5 px-2 font-mono text-right ${color} ${bold ? 'font-semibold' : ''}`}>
+                      <td key={i} className={`py-1.5 px-2 text-right ${color} ${bold ? 'font-semibold' : ''}`} style={{ fontVariantNumeric: 'tabular-nums' }}>
                         {format(val)}
                       </td>
                     );
                   })}
-                  <td className={`py-1.5 px-2 font-mono text-right font-bold ${
-                    negative && sumColumn(months, key) < 0 ? 'text-red-600' : 'text-gray-900'
-                  }`}>
+                  <td className={`py-1.5 px-2 text-right font-bold ${
+                    negative && sumColumn(months, key) < 0 ? 'text-rose-600' : 'text-slate-900'
+                  }`} style={{ fontVariantNumeric: 'tabular-nums' }}>
                     {format(sumColumn(months, key))}
                   </td>
                 </tr>

@@ -1,15 +1,16 @@
 /**
  * HospiceKPIs.jsx — Section A: Operational KPIs
  */
+import { Activity } from 'lucide-react';
 import { formatCurrency, formatNumber, formatPercent } from '../engine/formatting.js';
 
 function Toggle({ value, onChange }) {
   return (
-    <div className="inline-flex rounded-md overflow-hidden border border-gray-300">
+    <div className="inline-flex rounded-lg overflow-hidden border border-slate-300">
       <button
         type="button"
         className={`px-3 py-1 text-sm font-medium transition-colors ${
-          value === 'yes' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          value === 'yes' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`}
         onClick={() => onChange('yes')}
       >
@@ -18,7 +19,7 @@ function Toggle({ value, onChange }) {
       <button
         type="button"
         className={`px-3 py-1 text-sm font-medium transition-colors ${
-          value === 'no' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          value === 'no' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`}
         onClick={() => onChange('no')}
       >
@@ -31,7 +32,7 @@ function Toggle({ value, onChange }) {
 function NumberInput({ label, value, onChange, step = 1, min, max, className = '' }) {
   return (
     <div className={className}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
       <input
         type="number"
         value={value}
@@ -39,7 +40,7 @@ function NumberInput({ label, value, onChange, step = 1, min, max, className = '
         min={min}
         max={max}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
       />
     </div>
   );
@@ -48,7 +49,7 @@ function NumberInput({ label, value, onChange, step = 1, min, max, className = '
 function ToggleRow({ label, value, onChange }) {
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-gray-700">{label}</span>
+      <span className="text-sm text-slate-700">{label}</span>
       <Toggle value={value} onChange={onChange} />
     </div>
   );
@@ -70,8 +71,11 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
   const quality = getQualityLevel(pl.patientQualityFactor);
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">A. Hospice Operational KPIs</h2>
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+      <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+        <Activity size={20} className="text-teal-600" />
+        A. Hospice Operational KPIs
+      </h2>
 
       {/* Toggles */}
       <div className="space-y-1 mb-6">
@@ -102,41 +106,41 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
       </div>
 
       {/* Calculated displays */}
-      <div className="bg-gray-50 rounded-md p-4">
-        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider mb-3">Calculated Metrics</h3>
+      <div className="bg-slate-50 rounded-lg p-4">
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Calculated Metrics</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6 text-sm">
           <div>
-            <span className="text-gray-500">Net Rate</span>
-            <p className="font-mono font-semibold">{formatNumber(netRate, 2)}</p>
+            <span className="text-slate-500">Net Rate</span>
+            <p className="font-semibold tabular-nums">{formatNumber(netRate, 2)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Admits / Year</span>
-            <p className="font-mono font-semibold">{formatNumber(admitsPerYear, 1)}</p>
+            <span className="text-slate-500">Admits / Year</span>
+            <p className="font-semibold tabular-nums">{formatNumber(admitsPerYear, 1)}</p>
           </div>
           <div>
-            <span className="text-gray-500">DCs / Year</span>
-            <p className="font-mono font-semibold">{formatNumber(dcsPerYear, 1)}</p>
+            <span className="text-slate-500">DCs / Year</span>
+            <p className="font-semibold tabular-nums">{formatNumber(dcsPerYear, 1)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Deaths / Year</span>
-            <p className="font-mono font-semibold">{formatNumber(deathsPerYear, 1)}</p>
+            <span className="text-slate-500">Deaths / Year</span>
+            <p className="font-semibold tabular-nums">{formatNumber(deathsPerYear, 1)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Patient Quality Factor</span>
-            <p className="font-mono font-semibold">{formatNumber(pl.patientQualityFactor, 3)}</p>
-            <p className="text-xs text-gray-400">{quality.label}</p>
+            <span className="text-slate-500">Patient Quality Factor</span>
+            <p className="font-semibold tabular-nums">{formatNumber(pl.patientQualityFactor, 3)}</p>
+            <p className="text-xs text-slate-400">{quality.label}</p>
           </div>
           <div>
-            <span className="text-gray-500">ACDRI v2</span>
-            <p className="font-mono font-semibold">{formatCurrency(pl.acdriV2)}</p>
+            <span className="text-slate-500">ACDRI v2</span>
+            <p className="font-semibold tabular-nums">{formatCurrency(pl.acdriV2)}</p>
           </div>
           <div>
-            <span className="text-gray-500">ACDRI v4</span>
-            <p className="font-mono font-semibold">{formatCurrency(pl.acdriV4)}</p>
+            <span className="text-slate-500">ACDRI v4</span>
+            <p className="font-semibold tabular-nums">{formatCurrency(pl.acdriV4)}</p>
           </div>
           <div>
-            <span className="text-gray-500">CAP / Patient</span>
-            <p className="font-mono font-semibold">{formatCurrency(pl.capPerPatient)}</p>
+            <span className="text-slate-500">CAP / Patient</span>
+            <p className="font-semibold tabular-nums">{formatCurrency(pl.capPerPatient)}</p>
           </div>
         </div>
       </div>

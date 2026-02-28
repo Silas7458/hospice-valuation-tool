@@ -8,7 +8,8 @@
  */
 export function formatCurrency(value, decimals = 0) {
   if (value == null || isNaN(value)) return '$0';
-  return '$' + Math.round(value).toLocaleString('en-US', {
+  const num = decimals === 0 ? Math.round(value) : value;
+  return '$' + Number(num).toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });

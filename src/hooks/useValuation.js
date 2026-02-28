@@ -70,11 +70,11 @@ export default function useValuation() {
   // Step 3: Build overrides from string inputs
   const overrides = useMemo(() => {
     const o = {};
-    if (inputs.overrideSde !== '')        o.sde        = parseFloat(inputs.overrideSde);
-    if (inputs.overrideEbitda !== '')      o.ebitda     = parseFloat(inputs.overrideEbitda);
-    if (inputs.overrideRevenue !== '')     o.revenue    = parseFloat(inputs.overrideRevenue);
-    if (inputs.overrideNormEbitda !== '')  o.normEbitda = parseFloat(inputs.overrideNormEbitda);
-    // perAdc override is not used — it's back-calculated
+    const tryParse = (str) => { const n = parseFloat(str); return isNaN(n) ? undefined : n; };
+    if (inputs.overrideSde !== '')        { const v = tryParse(inputs.overrideSde);        if (v !== undefined) o.sde = v; }
+    if (inputs.overrideEbitda !== '')      { const v = tryParse(inputs.overrideEbitda);      if (v !== undefined) o.ebitda = v; }
+    if (inputs.overrideRevenue !== '')     { const v = tryParse(inputs.overrideRevenue);     if (v !== undefined) o.revenue = v; }
+    if (inputs.overrideNormEbitda !== '')  { const v = tryParse(inputs.overrideNormEbitda);  if (v !== undefined) o.normEbitda = v; }
     return o;
   }, [inputs.overrideSde, inputs.overrideEbitda, inputs.overrideRevenue, inputs.overrideNormEbitda]);
 

@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/hospice-valuation-tool/',
+  base: process.env.GITHUB_PAGES ? '/hospice-valuation-tool/' : '/',
 })

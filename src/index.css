@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F8FAFC;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
