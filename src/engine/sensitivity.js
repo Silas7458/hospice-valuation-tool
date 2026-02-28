@@ -31,8 +31,8 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   else if (capPctOfRevenue > 8) capSensitivityTier = 'medium';
   else if (capPctOfRevenue > 3) capSensitivityTier = 'low';
 
-  // Auto-trigger EBITDA > 18% based on actual margin
-  const ebitdaAutoTriggered = pl.ebitdaMargin > 0.18;
+  // Auto-trigger EBITDA >= 18% based on actual margin
+  const ebitdaAutoTriggered = pl.ebitdaMargin >= 0.18;
 
   // Auto-trigger High Live Discharge Rate: (DCs - Deaths) / ADC >= 10%
   const liveDcCount = (inputs.dcRateToAdc - inputs.deathRateToAdc) * inputs.yearlyAdc;

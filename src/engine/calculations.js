@@ -100,7 +100,7 @@ function calcPatientQualityFactor(inputs) {
  */
 export function derivedMetrics(pl, inputs) {
   return {
-    ebitdaAbove18:  pl.ebitdaMargin > 0.18,
+    ebitdaAbove18:  pl.ebitdaMargin >= 0.18,
     ebitdaBelow12:  pl.ebitdaMargin < 0.12,
     ebitdaBelow10:  pl.ebitdaMargin < 0.10,
     ebitdaBelow8:   pl.ebitdaMargin < 0.08,

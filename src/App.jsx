@@ -11,6 +11,7 @@ import ProfitLoss from './components/ProfitLoss.jsx';
 import ValuationMultiples from './components/ValuationMultiples.jsx';
 import ValuationSummary from './components/ValuationSummary.jsx';
 import SensitivityBreakdown from './components/SensitivityBreakdown.jsx';
+import ValuationNarrative from './components/ValuationNarrative.jsx';
 import MonthlyDetail from './components/MonthlyDetail.jsx';
 import ShareButton from './components/ShareButton.jsx';
 import { formatCurrency, formatNumber } from './engine/formatting.js';
@@ -44,6 +45,7 @@ export default function App() {
     inputs,
     updateInput,
     pl,
+    derived,
     sensitivities,
     consensus,
     finalValuation,
@@ -137,6 +139,14 @@ export default function App() {
         {accessLevel !== 'client' && (
           <SensitivityBreakdown sensitivities={sensitivities} />
         )}
+        <ValuationNarrative
+          pl={pl}
+          sensitivities={sensitivities}
+          consensus={consensus}
+          finalValuation={finalValuation}
+          inputs={inputs}
+          derived={derived}
+        />
       </main>
 
       {/* Footer */}
