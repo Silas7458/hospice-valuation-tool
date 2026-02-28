@@ -8,7 +8,7 @@ const METHODS = [
   { key: 'sde',        label: 'SDE',              overrideKey: 'overrideSde',        type: 'multiple' },
   { key: 'ebitda',     label: 'EBITDA-A',         overrideKey: 'overrideEbitda',     type: 'multiple' },
   { key: 'revenue',    label: 'Revenue',          overrideKey: 'overrideRevenue',    type: 'multiple' },
-  { key: 'normEbitda', label: 'Norm EBITDA (NOI)', overrideKey: 'overrideNormEbitda', type: 'multiple' },
+  { key: 'normEbitda', label: 'Norm EBITDA',        overrideKey: 'overrideNormEbitda', type: 'multiple' },
   { key: 'perAdc',     label: '$/ADC',            overrideKey: 'overridePerAdc',     type: 'currency' },
 ];
 

@@ -8,7 +8,7 @@ const METHODS = [
   { key: 'sde',        label: 'SDE',               basisKey: 'sde',        basisLabel: 'SDE' },
   { key: 'ebitda',     label: 'EBITDA-A',          basisKey: 'ebitda',     basisLabel: 'EBITDA' },
   { key: 'revenue',    label: 'Revenue',           basisKey: 'netRevenue', basisLabel: 'Net Revenue' },
-  { key: 'normEbitda', label: 'Norm EBITDA (NOI)', basisKey: 'ebitda',     basisLabel: 'EBITDA' },
+  { key: 'normEbitda', label: 'Norm EBITDA',        basisKey: 'ebitda',     basisLabel: 'EBITDA' },
 ];
 
 export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation }) {

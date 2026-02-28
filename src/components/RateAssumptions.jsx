@@ -91,7 +91,6 @@ export default function RateAssumptions({ inputs, updateInput, pl }) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <PctInput label="Below-the-Line %" value={inputs.btlPct} onChange={(v) => updateInput('btlPct', v)} />
             <PctInput label="Sequestration Rate" value={inputs.sequestrationRate} onChange={(v) => updateInput('sequestrationRate', v)} />
-            <PctInput label="% Collected in 30 Days" value={inputs.pctCollected30Days} onChange={(v) => updateInput('pctCollected30Days', v)} />
           </div>
         </div>
       )}

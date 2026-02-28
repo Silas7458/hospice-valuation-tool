@@ -19,8 +19,9 @@ export function calculatePL(inputs) {
     (1 - inputs.pctHighRate) * inputs.rhcLowRate;
 
   const grossRevenue   = annualPatientDays * weightedAvgDailyRate;
+  const hqrpReduction  = inputs.hqrpPenalty === 'yes' ? -(grossRevenue * 0.02) : 0;
   const sequestration  = -(grossRevenue * inputs.sequestrationRate);
-  const netRevenue     = grossRevenue + sequestration;
+  const netRevenue     = grossRevenue + hqrpReduction + sequestration;
 
   // --- Expenses (expressed as negatives) ---
   const staffCosts   = -(netRevenue * inputs.staffCostPct);
@@ -60,6 +61,7 @@ export function calculatePL(inputs) {
     annualPatientDays,
     weightedAvgDailyRate,
     grossRevenue,
+    hqrpReduction,
     sequestration,
     netRevenue,
     staffCosts,
