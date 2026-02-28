@@ -99,7 +99,6 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
             </div>
           </div>
         )}
-        <ToggleRow label="Recurring CAP Liability (Annual Risk)" value={inputs.recurringCapLiability} onChange={(v) => updateInput('recurringCapLiability', v)} />
         <ToggleRow label="HQRP Penalty" value={inputs.hqrpPenalty} onChange={(v) => updateInput('hqrpPenalty', v)} />
       </div>
 

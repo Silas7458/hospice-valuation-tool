@@ -41,6 +41,7 @@ const FACTORS = [
   { key: 'hospitalRels',   label: 'Acute Hospital Relationships' },
   { key: 'highLiveDc',     label: 'High Live Discharge Rate' },
   { key: 'auditRisk',      label: 'Audit Risk (>10% in >=10 BP)' },
+  { key: 'recurringCapLiability', label: 'Recurring CAP Liability (Annual Risk)' },
 ];
 
 export default function QualifyingFactors({ inputs, updateInput }) {
