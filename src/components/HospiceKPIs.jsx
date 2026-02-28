@@ -145,7 +145,7 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
                 <input
                   type="text"
                   inputMode="decimal"
-                  value={Math.round(count * 10) / 10 || ''}
+                  value={count === 0 ? '' : (Math.round(count * 10) / 10).toFixed(1)}
                   placeholder="0"
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9.]/g, '');
