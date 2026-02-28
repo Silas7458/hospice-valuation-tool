@@ -92,7 +92,7 @@ function buildNarrative(pl, sensitivities, consensus, finalValuation, inputs, de
       text: `The following factors contribute positively to the enterprise value, supporting premium multiples across the valuation engines:\n\n${driverList}\n\n` +
         (derived.ebitdaAbove18 ? `The EBITDA margin at or above 18% signals operational efficiency that exceeds industry norms, commanding a premium in buyer negotiations. ` : '') +
         (adcGrowth > 0 ? `Census growth demonstrates market demand and referral source strength, a key indicator of sustainable revenue. ` : '') +
-        (pl.patientQualityFactor >= 1.05 ? `The patient quality factor of ${pl.patientQualityFactor.toFixed(3)} reflects favorable clinical outcomes and care patterns. ` : '')
+        (pl.patientQualityFactor >= 1.18 ? `The patient quality factor of ${pl.patientQualityFactor.toFixed(3)} reflects favorable clinical outcomes and care patterns. ` : '')
     });
   }
 

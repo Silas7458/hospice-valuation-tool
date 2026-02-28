@@ -18,11 +18,11 @@ import ShareButton from './components/ShareButton.jsx';
 import { formatCurrency, formatNumber } from './engine/formatting.js';
 
 function getQualityLevel(pqf) {
-  if (pqf >= 1.15) return 'Premium';
-  if (pqf >= 1.05) return 'Fair';
-  if (pqf >= 0.95) return 'Neutral';
-  if (pqf >= 0.85) return 'Below Avg';
-  return 'Risk';
+  if (pqf >= 1.30) return 'Exceptional';
+  if (pqf >= 1.18) return 'Strong';
+  if (pqf >= 0.95) return 'Standard';
+  if (pqf >= 0.82) return 'Below Standard';
+  return 'Accumulation Risk';
 }
 
 function HeroCard({ label, value, color = 'text-emerald-700' }) {

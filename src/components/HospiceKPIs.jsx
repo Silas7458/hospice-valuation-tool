@@ -115,10 +115,10 @@ function RateCountRow({ label, countLabel, rate, yearlyAdc, onRateChange }) {
 }
 
 function getQualityLevel(pqf) {
-  if (pqf >= 1.15) return { label: 'Level 1 — Premium Quality' };
-  if (pqf >= 1.05) return { label: 'Level 2 — Fair Quality' };
-  if (pqf >= 0.95) return { label: 'Level 3 — Neutral' };
-  if (pqf >= 0.85) return { label: 'Level 4 — Below Average' };
+  if (pqf >= 1.30) return { label: 'Level 1 — Exceptional' };
+  if (pqf >= 1.18) return { label: 'Level 2 — Strong' };
+  if (pqf >= 0.95) return { label: 'Level 3 — Standard' };
+  if (pqf >= 0.82) return { label: 'Level 4 — Below Standard' };
   return { label: 'Level 5 — Accumulation Risk' };
 }
 
