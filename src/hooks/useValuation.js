@@ -9,7 +9,7 @@ import { getStateFromUrl } from '../utils/urlState.js';
 
 const DEFAULT_INPUTS = {
   mcrMcdLicense: 'yes', auditExposure: 'no', priorCapLiabilities: 'no',
-  capLiabilityCount: 0, hqrpPenalty: 'no',
+  capLiabilityAmount: 0, hqrpPenalty: 'no',
   startAdc: 41.5, endAdc: 35.8, yearlyAdc: 40,
   admitRateToAdc: 0.23, dcRateToAdc: 0.23, deathRateToAdc: 0.15,
   cleanSurvey: 'yes', pureMedicare: 'no', highTurnover: 'no', highAlos: 'no',

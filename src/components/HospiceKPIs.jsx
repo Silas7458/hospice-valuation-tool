@@ -82,6 +82,22 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
         <ToggleRow label="MCR/MCD License" value={inputs.mcrMcdLicense} onChange={(v) => updateInput('mcrMcdLicense', v)} />
         <ToggleRow label="Audit Exposure" value={inputs.auditExposure} onChange={(v) => updateInput('auditExposure', v)} />
         <ToggleRow label="Prior CAP Liabilities" value={inputs.priorCapLiabilities} onChange={(v) => updateInput('priorCapLiabilities', v)} />
+        {inputs.priorCapLiabilities === 'yes' && (
+          <div className="ml-4 mt-1 max-w-xs">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Trailing CAP Liability Amount ($)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+              <input
+                type="number"
+                value={inputs.capLiabilityAmount}
+                min={0}
+                step={1000}
+                onChange={(e) => updateInput('capLiabilityAmount', parseFloat(e.target.value) || 0)}
+                className="w-full pl-7 pr-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              />
+            </div>
+          </div>
+        )}
         <ToggleRow label="HQRP Penalty" value={inputs.hqrpPenalty} onChange={(v) => updateInput('hqrpPenalty', v)} />
       </div>
 

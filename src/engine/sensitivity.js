@@ -57,11 +57,14 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
   // --- CAP adjustment (H75) ---
   const capAdj = (pl.acdriV2 + pl.acdriV4) / 2;
 
+  // --- Trailing CAP liability deduction ---
+  const trailingCapLiability = inputs.priorCapLiabilities === 'yes' ? (inputs.capLiabilityAmount || 0) : 0;
+
   // --- Final adjusted values ---
-  const lowAdj   = low + capAdj;
-  const midAdj   = mid + capAdj;
-  const highAdj  = high + capAdj;
-  const finalEv  = mid + capAdj;
+  const lowAdj   = low + capAdj - trailingCapLiability;
+  const midAdj   = mid + capAdj - trailingCapLiability;
+  const highAdj  = high + capAdj - trailingCapLiability;
+  const finalEv  = mid + capAdj - trailingCapLiability;
 
   // --- Harmonization gap ---
   const harmonizationGap    = Math.abs(evEbitda - evRevenue);
@@ -106,6 +109,7 @@ export function calculateAllSensitivities(inputs, pl, derived, overrides = {}) {
 
     // CAP adjustment
     capAdj,
+    trailingCapLiability,
 
     // CAP-adjusted range
     lowAdj,

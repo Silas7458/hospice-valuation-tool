@@ -12,7 +12,7 @@ const METHODS = [
 ];
 
 export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation }) {
-  const { multiples, ev, capAdj, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
+  const { multiples, ev, capAdj, trailingCapLiability, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
 
   const basisValues = {
     sde: pl.sde,
@@ -89,6 +89,16 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
           <span className="text-xs ml-1">({capAdj >= 0 ? 'surplus' : 'liability'})</span>
         </span>
       </div>
+
+      {/* Trailing CAP Liability */}
+      {trailingCapLiability > 0 && (
+        <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
+          <span className="text-slate-500">Trailing CAP Liability Deduction</span>
+          <span className="font-semibold text-rose-600" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            -{formatCurrency(trailingCapLiability)}
+          </span>
+        </div>
+      )}
 
       {/* Range */}
       <div className="grid grid-cols-3 gap-3 mb-4">
