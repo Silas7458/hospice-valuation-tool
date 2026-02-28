@@ -71,7 +71,7 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
 
       {/* Consensus EV */}
       <div className="bg-teal-50 rounded-lg px-4 py-3 mb-3">
-        <div className="text-sm text-teal-700 mb-1">Consensus EV (4-Method Average)</div>
+        <div className="text-sm text-teal-700 mb-1">Consensus EV <span className="text-teal-500 font-normal">(4-method average before adjustments)</span></div>
         <div className="text-2xl font-bold text-teal-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(consensus)}</div>
       </div>
 
@@ -140,7 +140,7 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
 
       {/* Final EV */}
       <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl px-6 py-5 text-center">
-        <div className="text-sm text-emerald-700 font-medium mb-1">Final Estimated Enterprise Value</div>
+        <div className="text-sm text-emerald-700 font-medium mb-1">Final Enterprise Value <span className="text-emerald-500 font-normal">(consensus + CAP position &minus; trailing debt)</span></div>
         <div className="text-3xl font-bold text-emerald-900" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(finalValuation)}</div>
       </div>
     </div>

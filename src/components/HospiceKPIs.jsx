@@ -102,14 +102,62 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
         <ToggleRow label="HQRP Penalty" value={inputs.hqrpPenalty} onChange={(v) => updateInput('hqrpPenalty', v)} />
       </div>
 
-      {/* Census & Rates */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+      {/* Census */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <NumberInput label="Start ADC" value={inputs.startAdc} onChange={(v) => updateInput('startAdc', v)} step={0.1} />
         <NumberInput label="End ADC" value={inputs.endAdc} onChange={(v) => updateInput('endAdc', v)} step={0.1} />
         <NumberInput label="Yearly ADC" value={inputs.yearlyAdc} onChange={(v) => updateInput('yearlyAdc', v)} step={0.1} />
-        <NumberInput label="Admit Rate / ADC" value={inputs.admitRateToAdc} onChange={(v) => updateInput('admitRateToAdc', v)} step={0.01} />
-        <NumberInput label="DC Rate / ADC" value={inputs.dcRateToAdc} onChange={(v) => updateInput('dcRateToAdc', v)} step={0.01} />
-        <NumberInput label="Death Rate / ADC" value={inputs.deathRateToAdc} onChange={(v) => updateInput('deathRateToAdc', v)} step={0.01} />
+      </div>
+
+      {/* Rates — enter rate (%) OR count, either updates the other */}
+      <div className="space-y-2 mb-6">
+        <p className="text-xs text-slate-400">Enter rate (%) or count — the other calculates automatically</p>
+        {[
+          { rateKey: 'admitRateToAdc', label: 'Admit', countLabel: 'Admits/Yr' },
+          { rateKey: 'dcRateToAdc', label: 'DC', countLabel: 'DCs/Yr' },
+          { rateKey: 'deathRateToAdc', label: 'Death', countLabel: 'Deaths/Yr' },
+        ].map(({ rateKey, label, countLabel }) => {
+          const rate = inputs[rateKey];
+          const count = rate * inputs.yearlyAdc;
+          const pctDisplay = Math.round(rate * 10000) / 100;
+          return (
+            <div key={rateKey} className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-slate-500 mb-0.5">{label} Rate (%)</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={pctDisplay || ''}
+                    placeholder="0"
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '');
+                      updateInput(rateKey, raw === '' ? 0 : parseFloat(raw) / 100);
+                    }}
+                    className="w-full px-3 py-2 pr-7 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
+                </div>
+              </div>
+              <span className="text-slate-300 mt-4">or</span>
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-slate-500 mb-0.5">{countLabel}</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={Math.round(count * 10) / 10 || ''}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '');
+                    const n = raw === '' ? 0 : parseFloat(raw);
+                    updateInput(rateKey, inputs.yearlyAdc > 0 ? n / inputs.yearlyAdc : 0);
+                  }}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Calculated displays */}
@@ -118,19 +166,7 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6 text-sm">
           <div>
             <span className="text-slate-500">Net Rate</span>
-            <p className="font-semibold tabular-nums">{formatNumber(netRate, 2)}</p>
-          </div>
-          <div>
-            <span className="text-slate-500">Admits / Year</span>
-            <p className="font-semibold tabular-nums">{formatNumber(admitsPerYear, 1)}</p>
-          </div>
-          <div>
-            <span className="text-slate-500">DCs / Year</span>
-            <p className="font-semibold tabular-nums">{formatNumber(dcsPerYear, 1)}</p>
-          </div>
-          <div>
-            <span className="text-slate-500">Deaths / Year</span>
-            <p className="font-semibold tabular-nums">{formatNumber(deathsPerYear, 1)}</p>
+            <p className="font-semibold tabular-nums">{formatPercent(netRate)}</p>
           </div>
           <div>
             <span className="text-slate-500">Patient Quality Factor</span>
@@ -148,6 +184,12 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
           <div>
             <span className="text-slate-500">CAP / Patient</span>
             <p className="font-semibold tabular-nums">{formatCurrency(pl.capPerPatient)}</p>
+          </div>
+          <div>
+            <span className="text-slate-500">EBITDA Margin</span>
+            <p className={`font-semibold tabular-nums ${pl.ebitdaMargin >= 0.15 ? 'text-emerald-600' : pl.ebitdaMargin >= 0.08 ? 'text-amber-600' : 'text-rose-600'}`}>
+              {formatPercent(pl.ebitdaMargin)}
+            </p>
           </div>
         </div>
       </div>

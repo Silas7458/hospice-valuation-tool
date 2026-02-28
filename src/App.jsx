@@ -1,7 +1,8 @@
 /**
  * App.jsx — Main layout for the Hospice Valuation Tool
  */
-import { HeartPulse } from 'lucide-react';
+import { useState } from 'react';
+import { HeartPulse, Shield, Eye, Settings } from 'lucide-react';
 import useValuation from './hooks/useValuation.js';
 import HospiceKPIs from './components/HospiceKPIs.jsx';
 import QualifyingFactors from './components/QualifyingFactors.jsx';
@@ -31,7 +32,14 @@ function HeroCard({ label, value, color = 'text-emerald-700' }) {
   );
 }
 
+const ACCESS_LEVELS = [
+  { key: 'client', label: 'Client', icon: Eye, color: 'bg-blue-500' },
+  { key: 'enterprise', label: 'Enterprise', icon: Shield, color: 'bg-amber-500' },
+  { key: 'master', label: 'Master', icon: Settings, color: 'bg-emerald-500' },
+];
+
 export default function App() {
+  const [accessLevel, setAccessLevel] = useState('master');
   const {
     inputs,
     updateInput,
@@ -52,8 +60,27 @@ export default function App() {
             <HeartPulse size={24} />
             <span className="text-lg font-bold">Hospice Valuation Tool</span>
           </div>
-          <span className="text-sm text-slate-300 hidden md:block">Amerix Medical Consulting, LLC</span>
-          <ShareButton inputs={inputs} />
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-1">
+              {ACCESS_LEVELS.map(({ key, label, icon: Icon, color }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setAccessLevel(key)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    accessLevel === key
+                      ? `${color} text-white`
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title={`${label} View`}
+                >
+                  <Icon size={12} />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <ShareButton inputs={inputs} />
+          </div>
         </div>
       </header>
 
@@ -61,8 +88,8 @@ export default function App() {
       <main id="valuation-content" className="max-w-7xl mx-auto px-4 py-6">
         {/* Hero Metric Bar */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <HeroCard label="Final Enterprise Value" value={formatCurrency(finalValuation)} />
-          <HeroCard label="Consensus EV" value={formatCurrency(consensus)} />
+          <HeroCard label="Final EV (Market-Adjusted)" value={formatCurrency(finalValuation)} />
+          <HeroCard label="Consensus EV (Pre-Adjustment)" value={formatCurrency(consensus)} />
           <HeroCard
             label="$/ADC"
             value={formatCurrency(sensitivities.perAdcBackCalculated)}
@@ -106,8 +133,10 @@ export default function App() {
         </div>
 
         {/* Full-width sections */}
-        <SensitivityBreakdown sensitivities={sensitivities} />
         <MonthlyDetail inputs={inputs} pl={pl} />
+        {accessLevel !== 'client' && (
+          <SensitivityBreakdown sensitivities={sensitivities} />
+        )}
       </main>
 
       {/* Footer */}
