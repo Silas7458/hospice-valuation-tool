@@ -59,13 +59,9 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  // Admin page — separate from main auth flow
-  if (showAdmin) {
-    return <AdminPage onBack={() => { window.location.hash = ''; setShowAdmin(false); }} />;
-  }
-
   // Check auth on mount
   useEffect(() => {
+    if (showAdmin) return; // skip auth check when on admin page
     fetch('/api/check-auth')
       .then(res => {
         setAuthenticated(res.ok);
@@ -75,7 +71,12 @@ export default function App() {
         setAuthenticated(false);
         setAuthChecked(true);
       });
-  }, []);
+  }, [showAdmin]);
+
+  // Admin page — separate from main auth flow
+  if (showAdmin) {
+    return <AdminPage onBack={() => { window.location.hash = ''; setShowAdmin(false); }} />;
+  }
 
   // Show loading pulse while checking auth
   if (!authChecked) {
