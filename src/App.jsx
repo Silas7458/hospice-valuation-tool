@@ -16,6 +16,7 @@ import ValuationNarrative from './components/ValuationNarrative.jsx';
 import MonthlyDetail from './components/MonthlyDetail.jsx';
 import ShareButton from './components/ShareButton.jsx';
 import LoginPage from './components/LoginPage.jsx';
+import AdminPage from './components/AdminPage.jsx';
 import { formatCurrency, formatNumber } from './engine/formatting.js';
 
 function getQualityLevel(pqf) {
@@ -49,6 +50,19 @@ export default function App() {
   const [accessLevel, setAccessLevel] = useState('master');
   const [lockedAccess, setLockedAccess] = useState(false);
   const [expired, setExpired] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(window.location.hash === '#admin');
+
+  // Listen for hash changes
+  useEffect(() => {
+    function onHash() { setShowAdmin(window.location.hash === '#admin'); }
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Admin page — separate from main auth flow
+  if (showAdmin) {
+    return <AdminPage onBack={() => { window.location.hash = ''; setShowAdmin(false); }} />;
+  }
 
   // Check auth on mount
   useEffect(() => {
@@ -304,7 +318,16 @@ function AuthenticatedApp({ accessLevel, setAccessLevel, lockedAccess, setLocked
 
       {/* Footer */}
       <footer className="text-center text-xs text-slate-400 py-8 border-t border-slate-200 mt-12">
-        &copy; 2026 Amerix Medical Consulting, LLC &mdash; Powered by Amerix Intelligence
+        &copy; 2026{' '}
+        <button
+          type="button"
+          onClick={() => { window.location.hash = 'admin'; }}
+          className="text-slate-400 hover:text-slate-500 transition-colors cursor-text"
+          title=""
+        >
+          Amerix Medical Consulting, LLC
+        </button>
+        {' '}&mdash; Powered by Amerix Intelligence
       </footer>
     </div>
   );
