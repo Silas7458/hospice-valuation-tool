@@ -2,7 +2,7 @@
  * App.jsx — Main layout for the Hospice Valuation Tool
  */
 import { useState, useEffect } from 'react';
-import { HeartPulse, Shield, Eye, Settings } from 'lucide-react';
+import { HeartPulse, Shield, Eye, Settings, Home, Info, Mail, ShoppingCart } from 'lucide-react';
 import useValuation from './hooks/useValuation.js';
 import { getAccessLevelFromUrl } from './utils/urlState.js';
 import HospiceKPIs from './components/HospiceKPIs.jsx';
@@ -68,10 +68,36 @@ export default function App() {
 
   const qualityLabel = getQualityLevel(pl.patientQualityFactor);
 
+  const sidebarIcons = [
+    { icon: Home, label: 'Home', onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
+    { icon: Info, label: 'About' },
+    { icon: Mail, label: 'Contact' },
+    { icon: ShoppingCart, label: 'Purchase' },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 md:ml-14">
+      {/* Left Icon Sidebar */}
+      <nav className="hidden md:flex fixed left-0 top-0 h-full w-14 bg-slate-800 flex-col items-center py-4 gap-4 z-50">
+        <div className="mb-2">
+          <HeartPulse size={22} className="text-emerald-400" />
+        </div>
+        <div className="w-6 border-t border-slate-600" />
+        {sidebarIcons.map(({ icon: Icon, label, onClick }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={onClick}
+            title={label}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+          >
+            <Icon size={20} />
+          </button>
+        ))}
+      </nav>
+
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-slate-800 text-white shadow-md">
+      <header className="sticky top-0 z-40 bg-slate-800 text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <HeartPulse size={24} />
