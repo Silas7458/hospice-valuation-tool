@@ -1,9 +1,71 @@
 /**
  * RateAssumptions.jsx — Collapsible rate and cost assumptions section
  */
-import { useState } from 'react';
-import { Sliders, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sliders, ChevronDown, MapPin } from 'lucide-react';
 import { formatCurrency } from '../engine/formatting.js';
+import { TEXAS_CITIES, getCityData, getCountiesForCity, getDefaultCounty } from '../data/texasRates.js';
+
+function SelectInput({ label, value, onChange, options, icon }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = options.filter((o) => o.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      <button
+        type="button"
+        onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
+        className="w-full flex items-center justify-between px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-left"
+      >
+        <span className="flex items-center gap-2">
+          {icon}
+          <span className={value ? 'text-slate-800' : 'text-slate-400'}>{value || 'Select...'}</span>
+        </span>
+        <ChevronDown size={14} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-52 overflow-hidden">
+          <div className="p-2 border-b border-slate-100">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm border border-slate-200 rounded focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto max-h-40">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-slate-400">No matches</div>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => { onChange(opt); setIsOpen(false); setSearch(''); }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-teal-50 ${opt === value ? 'bg-teal-50 text-teal-700 font-medium' : 'text-slate-700'}`}
+                >
+                  {opt}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function PctInput({ label, value, onChange, step = 1 }) {
   // Display as whole number (e.g., 14 for 0.14), convert on change
@@ -44,7 +106,7 @@ function DollarInput({ label, value, onChange, step = 0.01 }) {
 }
 
 export default function RateAssumptions({ inputs, updateInput, pl }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-6">
@@ -65,6 +127,40 @@ export default function RateAssumptions({ inputs, updateInput, pl }) {
 
       {open && (
         <div className="px-6 pb-6 border-t border-slate-100 pt-4">
+          {/* Location */}
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <MapPin size={14} className="text-teal-600" />
+            Location
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            <SelectInput
+              label="State"
+              value={inputs.locationState}
+              onChange={(v) => updateInput('locationState', v)}
+              options={['Texas']}
+            />
+            <SelectInput
+              label="City"
+              value={inputs.locationCity}
+              onChange={(city) => {
+                updateInput('locationCity', city);
+                const data = getCityData(city);
+                if (data) {
+                  updateInput('locationCounty', data.counties[0]);
+                  updateInput('rhcHighRate', data.rhcHigh);
+                  updateInput('rhcLowRate', data.rhcLow);
+                }
+              }}
+              options={TEXAS_CITIES}
+            />
+            <SelectInput
+              label="County"
+              value={inputs.locationCounty}
+              onChange={(v) => updateInput('locationCounty', v)}
+              options={getCountiesForCity(inputs.locationCity)}
+            />
+          </div>
+
           {/* Rate inputs */}
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Reimbursement Rates</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">

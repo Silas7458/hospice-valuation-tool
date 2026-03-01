@@ -72,6 +72,25 @@ function RateCountRow({ label, countLabel, rate, yearlyAdc, onRateChange }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1">
+        <label className="block text-xs font-medium text-slate-500 mb-0.5">{countLabel}</label>
+        <input
+          type="text"
+          inputMode="decimal"
+          placeholder="0"
+          value={countText !== null ? countText : (computedCount === 0 ? '' : (Math.round(computedCount * 10) / 10).toFixed(1))}
+          onFocus={() => setCountText(computedCount ? String(Math.round(computedCount * 10) / 10) : '')}
+          onBlur={() => setCountText(null)}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9.]/g, '');
+            setCountText(raw);
+            const n = raw === '' ? 0 : parseFloat(raw);
+            onRateChange(yearlyAdc > 0 ? n / yearlyAdc : 0);
+          }}
+          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+        />
+      </div>
+      <span className="text-slate-300 mt-4">or</span>
+      <div className="flex-1">
         <label className="block text-xs font-medium text-slate-500 mb-0.5">{label} Rate (%)</label>
         <div className="relative">
           <input
@@ -90,25 +109,6 @@ function RateCountRow({ label, countLabel, rate, yearlyAdc, onRateChange }) {
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">%</span>
         </div>
-      </div>
-      <span className="text-slate-300 mt-4">or</span>
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-500 mb-0.5">{countLabel}</label>
-        <input
-          type="text"
-          inputMode="decimal"
-          placeholder="0"
-          value={countText !== null ? countText : (computedCount === 0 ? '' : (Math.round(computedCount * 10) / 10).toFixed(1))}
-          onFocus={() => setCountText(computedCount ? String(Math.round(computedCount * 10) / 10) : '')}
-          onBlur={() => setCountText(null)}
-          onChange={(e) => {
-            const raw = e.target.value.replace(/[^0-9.]/g, '');
-            setCountText(raw);
-            const n = raw === '' ? 0 : parseFloat(raw);
-            onRateChange(yearlyAdc > 0 ? n / yearlyAdc : 0);
-          }}
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-        />
       </div>
     </div>
   );
@@ -165,9 +165,9 @@ export default function HospiceKPIs({ inputs, updateInput, pl }) {
 
       {/* Census */}
       <div className="grid grid-cols-3 gap-4 mb-4">
+        <NumberInput label="Yearly ADC" value={inputs.yearlyAdc} onChange={(v) => updateInput('yearlyAdc', v)} step={0.1} />
         <NumberInput label="Start ADC" value={inputs.startAdc} onChange={(v) => updateInput('startAdc', v)} step={0.1} />
         <NumberInput label="End ADC" value={inputs.endAdc} onChange={(v) => updateInput('endAdc', v)} step={0.1} />
-        <NumberInput label="Yearly ADC" value={inputs.yearlyAdc} onChange={(v) => updateInput('yearlyAdc', v)} step={0.1} />
       </div>
 
       {/* Rates — enter rate (%) OR count, either updates the other */}

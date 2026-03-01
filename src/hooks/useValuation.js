@@ -14,6 +14,7 @@ const DEFAULT_INPUTS = {
   cleanSurvey: 'yes', pureMedicare: 'no', highTurnover: 'no', highAlos: 'no',
   viableAds: 0, conState: 'no', esop: 'no', strongRcm: 'no', highGip: 'no',
   nonReplicable: 'no', hospitalRels: 'no', highLiveDc: 'no', auditRisk: 'no', highEbitdaMargin: 'no', otherFactor: 'no',
+  locationState: 'Texas', locationCity: 'Dallas-Plano-Irving', locationCounty: 'Collin',
   rhcHighRate: 225.33, rhcLowRate: 177.61, pctHighRate: 0.14,
   staffCostPct: 0.65, patientCostPct: 0.10, opsCostPct: 0.10,
   btlPct: 0, sequestrationRate: 0.02, pctCollected30Days: 0.98,
