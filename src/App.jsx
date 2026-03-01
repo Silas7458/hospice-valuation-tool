@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { HeartPulse, Shield, Eye, Settings, Home, Info, Mail, ShoppingCart } from 'lucide-react';
 import useValuation from './hooks/useValuation.js';
-import { getAccessLevelFromUrl } from './utils/urlState.js';
+import { getAccessLevelFromUrl, isLinkExpired } from './utils/urlState.js';
 import HospiceKPIs from './components/HospiceKPIs.jsx';
 import QualifyingFactors from './components/QualifyingFactors.jsx';
 import RateAssumptions from './components/RateAssumptions.jsx';
@@ -43,6 +43,7 @@ const ACCESS_LEVELS = [
 export default function App() {
   const [accessLevel, setAccessLevel] = useState('master');
   const [lockedAccess, setLockedAccess] = useState(false);
+  const [expired, setExpired] = useState(false);
   const {
     inputs,
     updateInput,
@@ -55,8 +56,12 @@ export default function App() {
     updateFactorOverride,
   } = useValuation();
 
-  // On mount, check URL for locked access level
+  // On mount, check URL for locked access level and expiry
   useEffect(() => {
+    if (isLinkExpired()) {
+      setExpired(true);
+      return;
+    }
     const urlAccess = getAccessLevelFromUrl();
     if (urlAccess && urlAccess !== 'master') {
       setAccessLevel(urlAccess);
@@ -74,6 +79,23 @@ export default function App() {
     { icon: Mail, label: 'Contact' },
     { icon: ShoppingCart, label: 'Purchase' },
   ];
+
+  if (expired) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-4">
+          <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-10">
+            <HeartPulse size={48} className="text-slate-300 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">Link Expired</h1>
+            <p className="text-slate-500 leading-relaxed">
+              This valuation report link has expired. Please contact Amerix Medical Consulting for a new link.
+            </p>
+          </div>
+          <p className="text-xs text-slate-400 mt-6">&copy; 2026 Amerix Medical Consulting, LLC</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 md:ml-14">

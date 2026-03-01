@@ -16,8 +16,19 @@ export default function ShareButton({ inputs, accessLevel }) {
   const [recipientEmail, setRecipientEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState(null); // 'success' | 'error' | null
+  const [linkExpiry, setLinkExpiry] = useState('unlimited');
   const ref = useRef(null);
   const emailInputRef = useRef(null);
+
+  const EXPIRY_OPTIONS = [
+    { value: '24h', label: '24 Hours' },
+    { value: '48h', label: '48 Hours' },
+    { value: '7d', label: '7 Days' },
+    { value: '30d', label: '30 Days' },
+    { value: '3mo', label: '3 Months' },
+    { value: '12mo', label: '12 Months' },
+    { value: 'unlimited', label: 'Unlimited' },
+  ];
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -36,7 +47,7 @@ export default function ShareButton({ inputs, accessLevel }) {
   }, [emailDialogOpen]);
 
   function getShareUrl() {
-    const encoded = encodeState(inputs, accessLevel);
+    const encoded = encodeState(inputs, accessLevel, linkExpiry);
     return `${window.location.origin}${window.location.pathname}?v=${encoded}`;
   }
 
@@ -142,7 +153,20 @@ export default function ShareButton({ inputs, accessLevel }) {
         </button>
 
         {open && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+            {/* Link Expiry Selector */}
+            <div className="px-4 py-2 border-b border-slate-100">
+              <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">Link expires in</label>
+              <select
+                value={linkExpiry}
+                onChange={(e) => setLinkExpiry(e.target.value)}
+                className="w-full text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                {EXPIRY_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
             <button
               type="button"
               onClick={handleCopyLink}
@@ -226,6 +250,20 @@ export default function ShareButton({ inputs, accessLevel }) {
                 <div className="px-3 py-2.5 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600">
                   Hospice Valuation Report — Amerix Medical Consulting
                 </div>
+              </div>
+
+              {/* Link expiry */}
+              <div>
+                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Link Expires In</label>
+                <select
+                  value={linkExpiry}
+                  onChange={(e) => setLinkExpiry(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {EXPIRY_OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
