@@ -1,10 +1,9 @@
 /**
  * useValuation.js — Central state hook for the hospice valuation tool.
- * Uses useReducer for all user inputs, useMemo chains for derived calculations.
+ * Sends inputs to the server-side calculation API and returns results.
+ * Engine code never ships to the browser.
  */
-import { useReducer, useMemo, useEffect, useState, useCallback } from 'react';
-import { calculatePL, derivedMetrics } from '../engine/calculations.js';
-import { calculateAllSensitivities } from '../engine/sensitivity.js';
+import { useReducer, useEffect, useState, useCallback, useRef } from 'react';
 import { getStateFromUrl } from '../utils/urlState.js';
 
 const DEFAULT_INPUTS = {
@@ -34,20 +33,43 @@ function inputReducer(state, action) {
   }
 }
 
-/**
- * Map UI input keys to the engine-expected keys.
- * The sensitivity engines expect `staffTurnoverHigh` but the UI uses `highTurnover`.
- */
-function toEngineInputs(inputs) {
-  return {
-    ...inputs,
-    staffTurnoverHigh: inputs.highTurnover,
-  };
-}
+// Empty engine result shape for initial render
+const EMPTY_ENGINE = { starting: 0, factors: [], adjustmentSum: 0, total: 0 };
+
+const EMPTY_PL = {
+  avgDaysPerMonth: 0, monthlyPatientDays: 0, annualPatientDays: 0,
+  weightedAvgDailyRate: 0, grossRevenue: 0, hqrpReduction: 0,
+  sequestration: 0, netRevenue: 0,
+  staffCosts: 0, patientCosts: 0, opsCosts: 0,
+  ebitda: 0, ebitdaMargin: 0, btl: 0, noi: 0, sde: 0,
+  patientQualityFactor: 1, acdriV2: 0, acdriV4: 0, capPerPatient: 0,
+};
+
+const EMPTY_DERIVED = {
+  ebitdaAbove18: false, ebitdaBelow12: false, ebitdaBelow10: false, ebitdaBelow8: false,
+  capSurplus8k: false, hasMcrMcd: false, recurringCap: false, auditExposure: false,
+  adcBelow30: false, staffRetention: false, highEbitdaMargin: false,
+};
+
+const EMPTY_SENSITIVITIES = {
+  engines: { sde: EMPTY_ENGINE, perAdc: EMPTY_ENGINE, ebitda: EMPTY_ENGINE, revenue: EMPTY_ENGINE, normEbitda: EMPTY_ENGINE },
+  multiples: { sde: 0, ebitda: 0, revenue: 0, normEbitda: 0, perAdc: 0 },
+  ev: { sde: 0, ebitda: 0, revenue: 0, normEbitda: 0, perAdc: 0 },
+  low: 0, mid: 0, high: 0, consensus: 0, perAdcBackCalculated: 0,
+  capAdj: 0, trailingCapLiability: 0, capPctOfRevenue: 0,
+  capSensitivityTier: 'none', ebitdaAutoTriggered: false, liveDcAutoTriggered: false,
+  lowAdj: 0, midAdj: 0, highAdj: 0, finalEv: 0,
+  normEbitdaBasis: 0, harmonizationGap: 0, harmonizationGapPct: 0,
+};
 
 export default function useValuation() {
   const [inputs, dispatch] = useReducer(inputReducer, DEFAULT_INPUTS);
   const [factorOverrides, setFactorOverrides] = useState({});
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(false);
+  const debounceRef = useRef(null);
+  const abortRef = useRef(null);
 
   const updateFactorOverride = useCallback((engineKey, factorKey, value) => {
     setFactorOverrides(prev => {
@@ -77,43 +99,61 @@ export default function useValuation() {
     dispatch({ type: 'UPDATE_FIELD', field, value });
   };
 
-  const engineInputs = useMemo(() => toEngineInputs(inputs), [inputs]);
+  // Debounced server calculation
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  // Step 1: P&L
-  const pl = useMemo(() => calculatePL(engineInputs), [engineInputs]);
+    debounceRef.current = setTimeout(async () => {
+      // Abort any in-flight request
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-  // Step 2: Derived metrics
-  const derived = useMemo(() => derivedMetrics(pl, engineInputs), [pl, engineInputs]);
+      setLoading(true);
+      setAuthError(false);
 
-  // Step 3: Build overrides from string inputs
-  const overrides = useMemo(() => {
-    const o = {};
-    const tryParse = (str) => { const n = parseFloat(str); return isNaN(n) ? undefined : n; };
-    if (inputs.overrideSde !== '')        { const v = tryParse(inputs.overrideSde);        if (v !== undefined) o.sde = v; }
-    if (inputs.overrideEbitda !== '')      { const v = tryParse(inputs.overrideEbitda);      if (v !== undefined) o.ebitda = v; }
-    if (inputs.overrideRevenue !== '')     { const v = tryParse(inputs.overrideRevenue);     if (v !== undefined) o.revenue = v; }
-    if (inputs.overrideNormEbitda !== '')  { const v = tryParse(inputs.overrideNormEbitda);  if (v !== undefined) o.normEbitda = v; }
-    return o;
-  }, [inputs.overrideSde, inputs.overrideEbitda, inputs.overrideRevenue, inputs.overrideNormEbitda]);
+      try {
+        const res = await fetch('/api/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inputs, factorOverrides }),
+          signal: controller.signal,
+        });
 
-  // Step 4: All sensitivities, EVs, consensus
-  const sensitivities = useMemo(
-    () => calculateAllSensitivities(engineInputs, pl, derived, overrides, factorOverrides),
-    [engineInputs, pl, derived, overrides, factorOverrides],
-  );
+        if (res.status === 401) {
+          setAuthError(true);
+          return;
+        }
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-  const consensus = sensitivities.consensus;
-  const finalValuation = sensitivities.finalEv;
+        const data = await res.json();
+        setResult(data);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Calculation fetch failed:', err);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }, 350);
+
+    return () => clearTimeout(debounceRef.current);
+  }, [inputs, factorOverrides]);
 
   return {
     inputs,
     updateInput,
-    pl,
-    derived,
-    sensitivities,
-    consensus,
-    finalValuation,
+    pl: result?.pl ?? EMPTY_PL,
+    derived: result?.derived ?? EMPTY_DERIVED,
+    sensitivities: result?.sensitivities ?? EMPTY_SENSITIVITIES,
+    consensus: result?.consensus ?? 0,
+    finalValuation: result?.finalValuation ?? 0,
+    marketAdcRange: result?.marketAdcRange ?? { low: 0, high: 0 },
     factorOverrides,
     updateFactorOverride,
+    loading,
+    authError,
   };
 }

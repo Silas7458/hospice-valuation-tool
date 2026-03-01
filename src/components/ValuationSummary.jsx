@@ -3,7 +3,6 @@
  */
 import { TrendingUp, CheckCircle, AlertTriangle } from 'lucide-react';
 import { formatCurrency, formatPercent, formatMultiple } from '../engine/formatting.js';
-import { getMarketAdcRange } from '../engine/tiers.js';
 
 const METHODS = [
   { key: 'sde',        label: 'SDE',               basisKey: 'sde',        basisLabel: 'SDE' },
@@ -12,7 +11,7 @@ const METHODS = [
   { key: 'normEbitda', label: 'Norm EBITDA',        basisKey: 'normEbitda', basisLabel: 'Adj. EBITDA' },
 ];
 
-export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation, yearlyAdc }) {
+export default function ValuationSummary({ pl, sensitivities, consensus, finalValuation, yearlyAdc, marketAdcRange }) {
   const { multiples, ev, capAdj, capPctOfRevenue, capSensitivityTier, lowAdj, midAdj, highAdj, harmonizationGapPct, perAdcBackCalculated } = sensitivities;
 
   const basisValues = {
@@ -77,8 +76,7 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
 
       {/* $/ADC back-calculated with market indicator */}
       {(() => {
-        const range = getMarketAdcRange(yearlyAdc || 0);
-        const withinMarket = perAdcBackCalculated >= range.low && perAdcBackCalculated <= range.high;
+        const withinMarket = marketAdcRange && perAdcBackCalculated >= marketAdcRange.low && perAdcBackCalculated <= marketAdcRange.high;
         return (
           <div className="flex items-center justify-between bg-slate-50 rounded-lg px-4 py-2 mb-3 text-sm">
             <span className="text-slate-500">$/ADC (Back-Calculated)</span>
@@ -98,7 +96,7 @@ export default function ValuationSummary({ pl, sensitivities, consensus, finalVa
         );
       })()}
       <div className="text-xs text-slate-400 -mt-2 mb-3 px-4">
-        Market range: {formatCurrency(getMarketAdcRange(yearlyAdc || 0).low)} &ndash; {formatCurrency(getMarketAdcRange(yearlyAdc || 0).high)}
+        Market range: {formatCurrency(marketAdcRange?.low ?? 0)} &ndash; {formatCurrency(marketAdcRange?.high ?? 0)}
       </div>
 
       {/* CAP Risk Indicator */}

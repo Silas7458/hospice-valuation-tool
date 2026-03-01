@@ -3,7 +3,7 @@
  * Encodes access level in share URLs for locked sharing.
  */
 import { useState, useRef, useEffect } from 'react';
-import { Share2, Link, FileDown, Mail, Loader2, X, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Share2, Link, FileDown, Mail, Loader2, X, Send, CheckCircle2, AlertCircle } from 'lucide-react'; // Loader2 kept for email send
 import { encodeState } from '../utils/urlState.js';
 
 const FROM_EMAIL = 'executive.shelton@gmail.com';
@@ -11,7 +11,6 @@ const FROM_EMAIL = 'executive.shelton@gmail.com';
 export default function ShareButton({ inputs, accessLevel }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [sending, setSending] = useState(false);
@@ -68,40 +67,9 @@ export default function ShareButton({ inputs, accessLevel }) {
     setOpen(false);
   }
 
-  async function handleDownloadPdf() {
-    if (pdfLoading) return;
+  function handleDownloadPdf() {
     setOpen(false);
-    setPdfLoading(true);
-
-    try {
-      const el = document.getElementById('valuation-content');
-      if (!el) return;
-
-      const html2pdf = (await import('html2pdf.js')).default;
-
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PDF generation timed out')), 30000)
-      );
-
-      const generate = html2pdf()
-        .set({
-          margin: [10, 10, 10, 10],
-          filename: 'Hospice-Valuation-Report.pdf',
-          image: { type: 'jpeg', quality: 0.90 },
-          html2canvas: { scale: 1.5, useCORS: true, scrollY: 0, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'] },
-        })
-        .from(el)
-        .save();
-
-      await Promise.race([generate, timeout]);
-    } catch (err) {
-      console.error('PDF generation failed:', err);
-      alert('PDF generation failed. Try collapsing some sections and retry.');
-    } finally {
-      setPdfLoading(false);
-    }
+    window.print();
   }
 
   function handleOpenEmailDialog() {
@@ -178,15 +146,10 @@ export default function ShareButton({ inputs, accessLevel }) {
             <button
               type="button"
               onClick={handleDownloadPdf}
-              disabled={pdfLoading}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              {pdfLoading ? (
-                <Loader2 size={16} className="text-slate-400 animate-spin" />
-              ) : (
-                <FileDown size={16} className="text-slate-400" />
-              )}
-              {pdfLoading ? 'Generating...' : 'Download PDF'}
+              <FileDown size={16} className="text-slate-400" />
+              Download PDF
             </button>
             <button
               type="button"

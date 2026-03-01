@@ -8,3 +8,29 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Print stylesheet — triggered by Download PDF (window.print → Save as PDF) */
+@media print {
+  /* Hide non-content elements */
+  nav, header, footer, .no-print { display: none !important; }
+
+  /* Reset layout — remove sidebar offset and sticky positioning */
+  .md\:ml-14 { margin-left: 0 !important; }
+  .lg\:sticky { position: static !important; }
+
+  /* Clean white background */
+  body, .min-h-screen { background: white !important; }
+
+  /* Let content flow naturally for pagination */
+  main { padding: 0 !important; }
+  #valuation-content { max-width: 100% !important; }
+
+  /* Avoid breaking cards/tables across pages */
+  .rounded-xl, .rounded-lg, table { break-inside: avoid; }
+
+  /* Tighten spacing for print */
+  .mb-8 { margin-bottom: 1rem !important; }
+  .gap-6 { gap: 0.75rem !important; }
+  .gap-4 { gap: 0.5rem !important; }
+  .py-6 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+}
